@@ -1,0 +1,845 @@
+<title>De Vragenbak</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: één kolom op gsm-breedte. Boven de dobbelsteen, daaronder zes kleurvakken;
+   een vraag neemt het hele scherm over in de kleur van het thema. */
+:root {
+  --bg: #eef0f6;
+  --surface: #ffffff;
+  --ink: #171a2b;
+  --muted: #5b6078;
+  --line: #d6d9e6;
+  --die: #fdfcf8;
+  --die-pip: #171a2b;
+  --die-shadow: rgba(23, 26, 43, .22);
+
+  --c-blauw: #2468c8;
+  --c-roze: #ec6aa6;
+  --c-geel: #f4c531;
+  --c-paars: #7a4bb5;
+  --c-bruin: #8a5631;
+  --c-groen: #3bb46d;
+  --c-oranje: #f3842c;
+  --on-dark: #ffffff;
+  --on-light: #1b1423;
+
+  --cat: var(--c-blauw);
+  --cat-ink: var(--on-dark);
+
+  --display: "Bricolage Grotesque", "Trebuchet MS", "Segoe UI", sans-serif;
+  --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --r-lg: 24px;
+  --r-md: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11131d; --surface: #1c1f2e; --ink: #eceef7; --muted: #a0a5bd; --line: #32364b;
+    --die: #f6f4ec; --die-pip: #171a2b; --die-shadow: rgba(0, 0, 0, .5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11131d; --surface: #1c1f2e; --ink: #eceef7; --muted: #a0a5bd; --line: #32364b;
+  --die: #f6f4ec; --die-pip: #171a2b; --die-shadow: rgba(0, 0, 0, .5);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { height: 100%; }
+body {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.45;
+  transition: background-color .25s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+body.is-vraag { background: var(--cat); }
+
+.wrap {
+  max-width: 30rem;
+  margin: 0 auto;
+  padding-block: 18px 28px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; padding: 0; }
+button:focus-visible, summary:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+body.is-vraag button:focus-visible { outline-color: var(--cat-ink); }
+h1, h2, p, ol { margin: 0; }
+
+/* Kop */
+.kop { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.kop h1 { font-family: var(--display); font-weight: 800; font-size: 1.5rem; letter-spacing: -.02em; }
+.kop p { color: var(--muted); font-size: .875rem; }
+
+.label {
+  font-size: .75rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
+}
+
+/* Dobbelsteen */
+.worp {
+  width: 100%;
+  display: flex; align-items: center; gap: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  text-align: left;
+}
+.worp:active .steen { transform: scale(.96); }
+.steen {
+  flex: none;
+  width: 104px; height: 104px;
+  background: var(--die);
+  border-radius: 22px;
+  box-shadow: 0 10px 22px -8px var(--die-shadow), inset 0 -6px 0 rgba(23, 26, 43, .08);
+  display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+  padding: 16px; gap: 4px;
+  transition: transform .12s ease;
+}
+.steen span { border-radius: 50%; place-self: center; width: 18px; height: 18px; background: transparent; }
+.steen span.aan { background: var(--die-pip); }
+.steen.rolt { animation: tuimel .7s cubic-bezier(.3, .7, .3, 1); }
+@keyframes tuimel {
+  0% { transform: rotate(0) scale(1); }
+  25% { transform: rotate(-200deg) scale(.86); }
+  60% { transform: rotate(-340deg) scale(1.06); }
+  100% { transform: rotate(-360deg) scale(1); }
+}
+.worp-tekst { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.worp-groot { font-family: var(--display); font-weight: 800; font-size: 2.5rem; line-height: 1.05; letter-spacing: -.03em; }
+.worp-klein { color: var(--muted); font-size: .9375rem; }
+
+/* Kleurvakken */
+.kleuren { display: flex; flex-direction: column; gap: 10px; }
+.rooster { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.vak {
+  min-width: 0; min-height: 84px;
+  display: flex; flex-direction: column; justify-content: flex-end; gap: 2px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  text-align: left;
+  transition: transform .12s ease;
+}
+.vak:active { transform: scale(.97); }
+.vak-kleur { font-size: .72rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; opacity: .85; }
+.vak-thema { font-family: var(--display); font-weight: 800; font-size: 1.0625rem; line-height: 1.15; overflow-wrap: anywhere; }
+.lot {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px dashed var(--muted);
+  border-radius: var(--r-md);
+  font-weight: 600;
+  text-align: center;
+}
+.lot:active { background: var(--surface); }
+
+/* Uitleg en instellingen */
+.meer { border-top: 1px solid var(--line); padding-top: 14px; }
+.meer summary { font-weight: 600; cursor: pointer; padding: 4px 0; }
+.meer-inhoud { display: flex; flex-direction: column; gap: 18px; padding-top: 14px; font-size: .9375rem; }
+.meer ol { padding-left: 1.25em; display: flex; flex-direction: column; gap: 6px; }
+.blok { display: flex; flex-direction: column; gap: 8px; }
+.keuze { display: flex; gap: 8px; flex-wrap: wrap; }
+.knop {
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  text-align: center;
+  border: 1.5px solid var(--ink);
+}
+.knop.vol { background: var(--ink); color: var(--bg); }
+.knop.klein { padding: 8px 14px; font-size: .9375rem; }
+.keuze .knop[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.stip { display: inline-block; width: .7em; height: .7em; border-radius: 50%; margin-right: .45em; }
+
+/* Vraagscherm */
+.vraag { display: flex; flex-direction: column; gap: 16px; color: var(--cat-ink); }
+.vraag-kop { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.terug { font-weight: 600; padding: 6px 0; }
+.vraag-kleur { font-size: .8125rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; opacity: .85; }
+.vraag-thema { font-family: var(--display); font-weight: 800; font-size: 2rem; line-height: 1.05; letter-spacing: -.02em; text-wrap: balance; }
+.kaart {
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: var(--r-lg);
+  padding: 22px 20px 20px;
+  display: flex; flex-direction: column; gap: 20px;
+  box-shadow: 0 18px 30px -18px rgba(0, 0, 0, .45);
+}
+.kaart h2 {
+  font-family: var(--display); font-weight: 600;
+  font-size: clamp(1.375rem, 6.2vw, 1.75rem); line-height: 1.2; letter-spacing: -.01em;
+  text-wrap: balance;
+}
+.vraag-deel, .antwoord { display: flex; flex-direction: column; gap: 8px; }
+.antwoord {
+  background: var(--cat); color: var(--cat-ink);
+  border-radius: var(--r-md);
+  padding: 14px 16px 16px;
+}
+.antwoord .label { color: inherit; opacity: .85; }
+.antwoord-tekst { font-family: var(--display); font-weight: 800; font-size: 1.5rem; line-height: 1.2; overflow-wrap: anywhere; }
+.acties { display: flex; flex-direction: column; gap: 10px; }
+.acties .knop { width: 100%; padding: 15px 18px; font-size: 1.0625rem; }
+.tip { color: var(--muted); font-size: .9375rem; text-align: center; }
+.melding { font-size: .875rem; opacity: .9; }
+
+@media (prefers-reduced-motion: reduce) {
+  .steen.rolt { animation: none; }
+  body, .vak, .steen { transition: none; }
+}
+</style>
+
+<div class="wrap">
+
+  <!-- Startscherm -->
+  <main id="start">
+    <div class="wrap-in" style="display:flex;flex-direction:column;gap:18px">
+      <header class="kop">
+        <h1>De Vragenbak</h1>
+        <p>Vragen en dobbelsteen bij jullie bord</p>
+      </header>
+
+      <button class="worp" id="worp" type="button" aria-describedby="worp-klein">
+        <span class="steen" id="steen" aria-hidden="true"></span>
+        <span class="worp-tekst" aria-live="polite">
+          <span class="label">Dobbelsteen</span>
+          <span class="worp-groot" id="worp-groot">Gooi</span>
+          <span class="worp-klein" id="worp-klein">Tik om te gooien</span>
+        </span>
+      </button>
+
+      <section class="kleuren" aria-labelledby="kleur-titel">
+        <p class="label" id="kleur-titel">Op welke kleur sta je?</p>
+        <div class="rooster" id="rooster"></div>
+        <button class="lot" id="lot" type="button">Laat het lot een kleur kiezen</button>
+      </section>
+
+      <details class="meer" id="meer">
+        <summary>Uitleg en instellingen</summary>
+        <div class="meer-inhoud">
+          <div class="blok">
+            <p class="label">Zo speel je</p>
+            <ol>
+              <li>Gooi de dobbelsteen en verzet je pion op het bord.</li>
+              <li>Tik de kleur aan van het vakje waar je op landt. In het midden kies je zelf.</li>
+              <li>Een andere speler neemt de gsm, leest de vraag voor en tikt daarna op ‘Toon antwoord’.</li>
+              <li>Juist? Dan gooi je opnieuw. Fout? Dan is de volgende speler aan de beurt.</li>
+            </ol>
+          </div>
+          <div class="blok">
+            <p class="label">Vijfde kleur op jullie bord</p>
+            <div class="keuze">
+              <button class="knop klein" id="kies-paars" type="button" aria-pressed="true"><span class="stip" style="background:var(--c-paars)"></span>Paars</button>
+              <button class="knop klein" id="kies-bruin" type="button" aria-pressed="false"><span class="stip" style="background:var(--c-bruin)"></span>Bruin</button>
+            </div>
+          </div>
+          <div class="blok">
+            <p class="label">Vragen</p>
+            <p id="teller"></p>
+            <div class="keuze" id="reset-start">
+              <button class="knop klein" id="reset" type="button">Begin opnieuw met alle vragen</button>
+            </div>
+            <div class="blok" id="reset-zeker" hidden>
+              <p>Alle vragen komen terug in de bak, ook de vragen die jullie al hadden.</p>
+              <div class="keuze">
+                <button class="knop klein vol" id="reset-ja" type="button">Ja, schud opnieuw</button>
+                <button class="knop klein" id="reset-nee" type="button">Annuleer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+  </main>
+
+  <!-- Vraagscherm -->
+  <main id="vraag" class="vraag" hidden>
+    <div class="vraag-kop">
+      <button class="terug" id="terug" type="button">← Terug naar de dobbelsteen</button>
+      <div>
+        <p class="vraag-kleur" id="vraag-kleur"></p>
+        <p class="vraag-thema" id="vraag-thema"></p>
+      </div>
+      <p class="melding" id="melding" hidden>Alle vragen van deze kleur zijn geweest. Ze zijn opnieuw geschud.</p>
+    </div>
+
+    <article class="kaart">
+      <div class="vraag-deel">
+        <p class="label">Vraag</p>
+        <h2 id="vraag-tekst"></h2>
+      </div>
+      <div class="antwoord" id="antwoord" hidden>
+        <p class="label">Antwoord</p>
+        <p class="antwoord-tekst" id="antwoord-tekst"></p>
+      </div>
+      <div class="acties">
+        <button class="knop vol" id="toon" type="button">Toon antwoord</button>
+        <button class="knop" id="andere" type="button">Andere vraag</button>
+        <button class="knop vol" id="volgende" type="button" hidden>Volgende beurt</button>
+      </div>
+      <p class="tip" id="tip" hidden>Juist? Gooi nog eens. Fout? Geef de gsm door.</p>
+    </article>
+  </main>
+
+</div>
+
+<script>
+const VRAGEN = {
+  blauw: [
+    ["Wat is de hoofdstad van Australië?", "Canberra"],
+    ["In welke stad staat het hoogste gebouw ter wereld, de Burj Khalifa?", "Dubai"],
+    ["Welke rivier stroomt door Parijs?", "De Seine"],
+    ["Welk land heeft sinds 2023 de meeste inwoners ter wereld?", "India"],
+    ["Wat is de hoogste berg ter wereld?", "De Mount Everest"],
+    ["In welke Belgische stad staat het Atomium?", "Brussel"],
+    ["Welk Europees land heeft de vorm van een laars?", "Italië"],
+    ["Wat is de grootste oceaan ter wereld?", "De Stille Oceaan"],
+    ["In welk land vind je de Inca-stad Machu Picchu?", "Peru"],
+    ["Wat is de hoofdstad van Oostenrijk?", "Wenen"],
+    ["Hoe heet de zee-engte tussen Engeland en Frankrijk, waar een treintunnel onderdoor loopt?", "Het Kanaal"],
+    ["Welk land is qua oppervlakte het grootste ter wereld?", "Rusland"],
+    ["In welke stad staat de Sagrada Família?", "Barcelona"],
+    ["Wat is de hoofdstad van Canada?", "Ottawa"],
+    ["Wat is het grootste eiland ter wereld?", "Groenland"],
+    ["Welke rivier stroomt door Antwerpen?", "De Schelde"],
+    ["In welk land ligt de stad Marrakech?", "Marokko"],
+    ["Wat is de grootste zandwoestijn ter wereld?", "De Sahara"],
+    ["Welk land wil sinds 2022 officieel 'Türkiye' genoemd worden?", "Turkije"],
+    ["Bij welk land hoort het vakantie-eiland Bali?", "Indonesië"],
+    ["Wat is de hoofdstad van Japan?", "Tokio"],
+    ["Welke twee grote landen liggen op het Iberisch Schiereiland?", "Spanje en Portugal"],
+    ["Hoeveel provincies telt België?", "Tien"],
+    ["Welke stad wordt 'The Big Apple' genoemd?", "New York"],
+    ["Wat is het kleinste land ter wereld?", "Vaticaanstad"],
+    ["Welke zee ligt tussen Europa en Afrika?", "De Middellandse Zee"],
+    ["Wat is de hoofdstad van Nederland?", "Amsterdam"],
+    ["In welke Amerikaanse staat ligt Los Angeles?", "Californië"],
+    ["Van welk Scandinavisch land is Oslo de hoofdstad?", "Noorwegen"],
+    ["Hoe heet het hoogste punt van België?", "Signaal van Botrange"],
+    ["Welk kanaal in Egypte raakte in 2021 geblokkeerd door het containerschip Ever Given?", "Het Suezkanaal"],
+    ["Wat is het grootste land van Zuid-Amerika?", "Brazilië"],
+    ["Van welk land is Reykjavik de hoofdstad?", "IJsland"],
+    ["Welk Noord-Europees land werd in 2023 het 31ste lid van de NAVO?", "Finland"],
+    ["Op welk continent ligt Egypte?", "Afrika"],
+    ["Welke Italiaanse stad staat bekend om haar kanalen en gondels?", "Venetië"],
+    ["Wat is de hoofdstad van Zuid-Korea?", "Seoel"],
+    ["In welk land ligt de Kilimanjaro?", "Tanzania"],
+    ["Welk land aan de Adriatische Zee stapte in 2023 over op de euro?", "Kroatië"],
+    ["Welke Belgische kuststad wordt 'de Koningin der Badsteden' genoemd?", "Oostende"],
+    ["Welk gebergte vormt de grens tussen Frankrijk en Spanje?", "De Pyreneeën"],
+    ["Wat is de hoofdstad van Turkije?", "Ankara"],
+    ["Welke taal spreken ze in Brazilië?", "Portugees"],
+    ["Hoe heet de beroemde rode rots in het midden van Australië?", "Uluru (Ayers Rock)"],
+    ["In welke stad staat de Brandenburger Tor?", "Berlijn"],
+    ["Welke Amerikaanse staat bestaat volledig uit eilanden in de Stille Oceaan?", "Hawaï"],
+    ["Welke stad is de hoofdstad van Wallonië?", "Namen"],
+    ["Aan welke zee ligt de Belgische kust?", "De Noordzee"],
+    ["In welk land ligt Transsylvanië, de streek van graaf Dracula?", "Roemenië"],
+    ["Welk land heeft een rood esdoornblad in zijn vlag?", "Canada"],
+    ["Welke Turkse stad heette vroeger Constantinopel?", "Istanbul"],
+    ["Bij welk koninkrijk hoort Groenland?", "Denemarken"],
+    ["Welke golf wilde president Trump in 2025 omdopen tot 'Golf van Amerika'?", "De Golf van Mexico"]
+  ],
+  roze: [
+    ["Welke film uit 2023 met Margot Robbie draait rond een wereldberoemde pop?", "Barbie"],
+    ["Welke zangeres brak alle records met haar 'Eras Tour'?", "Taylor Swift"],
+    ["In welke Zuid-Koreaanse Netflix-reeks spelen deelnemers dodelijke kinderspelletjes?", "Squid Game"],
+    ["Wie speelt Wednesday Addams in de Netflix-reeks 'Wednesday'?", "Jenna Ortega"],
+    ["Welke film over de vader van de atoombom won in 2024 de Oscar voor beste film?", "Oppenheimer"],
+    ["Welke Belgische zanger scoorde hits met 'Alors on danse' en 'Papaoutai'?", "Stromae"],
+    ["In welke reeks strijden families om de IJzeren Troon?", "Game of Thrones"],
+    ["Wie zong in 2023 de wereldhit 'Flowers'?", "Miley Cyrus"],
+    ["Welke Vlaamse tv-quiz werd jarenlang gepresenteerd door Erik Van Looy?", "De Slimste Mens ter Wereld"],
+    ["Uit welke Disneyfilm komt het lied 'Let It Go'?", "Frozen"],
+    ["Welk land won het Eurovisiesongfestival 2024 met Nemo?", "Zwitserland"],
+    ["Welke Italiaanse rockband won het Eurovisiesongfestival 2021?", "Måneskin"],
+    ["Hoe heet de tovenaarsschool van Harry Potter?", "Zweinstein (Hogwarts)"],
+    ["Welke acteur speelt Iron Man in de Marvel-films?", "Robert Downey Jr."],
+    ["Welke Netflix-reeks speelt zich af in het stadje Hawkins, met de Upside Down?", "Stranger Things"],
+    ["Wie zingt 'Bad Guy' en 'What Was I Made For?'", "Billie Eilish"],
+    ["In welk Vlaams tv-programma zoeken kandidaten uit wie de saboteur is?", "De Mol"],
+    ["Welke film uit 1997 over een zinkend schip won elf Oscars?", "Titanic"],
+    ["Welke zangeres trad zwanger op tijdens de halftime show van de Super Bowl in 2023?", "Rihanna"],
+    ["In welke Spaanse reeks dragen overvallers rode overalls en Dalí-maskers?", "La Casa de Papel"],
+    ["Welke gele spons woont in een ananas op de bodem van de zee?", "SpongeBob SquarePants"],
+    ["Welke Britse zanger zingt 'Shape of You' en 'Perfect'?", "Ed Sheeran"],
+    ["Hoe heet het vervolg op 'Avatar' dat eind 2022 in de zalen kwam?", "Avatar: The Way of Water"],
+    ["In welke Zuid-Koreaanse boyband zitten Jungkook, V en Jimin?", "BTS"],
+    ["Welke Brusselse zangeres scoorde met 'Balance ton quoi' en 'Tout oublier'?", "Angèle"],
+    ["Welke acteur speelt kapitein Jack Sparrow in 'Pirates of the Caribbean'?", "Johnny Depp"],
+    ["Welke streamingdienst heeft een rode N als logo?", "Netflix"],
+    ["Wie zong de zomerhit 'Espresso' in 2024?", "Sabrina Carpenter"],
+    ["Welke gele tekenfilmfamilie woont in Springfield?", "The Simpsons"],
+    ["Welke Marvel-film uit 2019 sloot het verhaal rond Thanos af?", "Avengers: Endgame"],
+    ["Welke rapper heet in het echt Marshall Mathers?", "Eminem"],
+    ["In welke reeks speelt Pedro Pascal de smokkelaar Joel, die Ellie moet beschermen?", "The Last of Us"],
+    ["In welke K-popgroep zitten Jennie, Lisa, Rosé en Jisoo?", "Blackpink"],
+    ["Uit welke Disneyfilm komt het lied 'We Don't Talk About Bruno'?", "Encanto"],
+    ["Welke geheim agent draagt het nummer 007?", "James Bond"],
+    ["Welke acteur speelde James Bond voor het laatst in 'No Time to Die'?", "Daniel Craig"],
+    ["Welke Vlaamse band maakte het nummer 'Mia'?", "Gorki"],
+    ["Welk wereldberoemd dancefestival vindt elke zomer plaats in Boom?", "Tomorrowland"],
+    ["Welke zangeres bracht in 2024 het countryalbum 'Cowboy Carter' uit?", "Beyoncé"],
+    ["In welke musicalfilm spelen Ryan Gosling en Emma Stone een jazzpianist en een actrice?", "La La Land"],
+    ["In welke sitcom drinken zes vrienden koffie in Central Perk?", "Friends"],
+    ["Welke loodgieter uit een videogame kreeg in 2023 een eigen animatiefilm?", "Mario"],
+    ["Wie zong in 2022 de hit 'As It Was'?", "Harry Styles"],
+    ["Welke Britse band rond Chris Martin maakte 'Viva la Vida'?", "Coldplay"],
+    ["Welke Netflix-reeks vertelt het verhaal van de Britse koninklijke familie?", "The Crown"],
+    ["Welke Zuid-Koreaanse film won in 2020 de Oscar voor beste film?", "Parasite"],
+    ["Welke kabouter met een puntmuts is een creatie van Studio 100?", "Kabouter Plop"],
+    ["Welke zanger van 'Blinding Lights' heet in het echt Abel Tesfaye?", "The Weeknd"],
+    ["Welke Pixar-film uit 2024 speelt zich af in het hoofd van tiener Riley?", "Inside Out 2"],
+    ["Welk land won het Eurovisiesongfestival 2025?", "Oostenrijk"],
+    ["Welke musicalfilm uit 2024 met Ariana Grande vertelt over de heksen van Oz?", "Wicked"],
+    ["In welke reeks wordt scheikundeleraar Walter White een drugsbaron?", "Breaking Bad"],
+    ["Welke animatiefilm op Netflix over een meidengroep die op demonen jaagt, werd een hit in 2025?", "KPop Demon Hunters"],
+    ["Welke Britse Netflix-reeks uit 2025 gaat over een jongen van 13 die verdacht wordt van moord?", "Adolescence"]
+  ],
+  geel: [
+    ["In welk jaar viel de Berlijnse Muur?", "1989"],
+    ["Wie zette als eerste mens voet op de maan?", "Neil Armstrong"],
+    ["Welke Britse koningin overleed in 2022 na zeventig jaar op de troon?", "Elizabeth II"],
+    ["In welk jaar begon de Tweede Wereldoorlog?", "1939"],
+    ["Welk schip zonk in 1912 na een botsing met een ijsberg?", "De Titanic"],
+    ["Wie is sinds 2013 koning der Belgen?", "Filip"],
+    ["Welk virus legde in 2020 de hele wereld stil?", "Het coronavirus (covid-19)"],
+    ["Welk land viel Rusland binnen in februari 2022?", "Oekraïne"],
+    ["Wie was de eerste zwarte president van de Verenigde Staten?", "Barack Obama"],
+    ["Hoe noemen we het vertrek van het Verenigd Koninkrijk uit de Europese Unie?", "Brexit"],
+    ["Welke Franse keizer werd in 1815 verslagen in Waterloo?", "Napoleon"],
+    ["Welk volk bouwde de piramides van Gizeh?", "De oude Egyptenaren"],
+    ["In welk jaar werd België onafhankelijk?", "1830"],
+    ["Welke Parijse kathedraal brandde in 2019 en ging eind 2024 weer open?", "De Notre-Dame"],
+    ["Welke munt verving in 2002 de Belgische frank?", "De euro"],
+    ["Wie was de leider van nazi-Duitsland?", "Adolf Hitler"],
+    ["In welke stad stonden de Twin Towers?", "New York"],
+    ["Welke naam koos de eerste Amerikaanse paus, verkozen in 2025?", "Leo XIV"],
+    ["Welke paus overleed op paasmaandag 2025?", "Franciscus"],
+    ["Wie volgde koningin Elizabeth II op als Brits staatshoofd?", "Charles III"],
+    ["Welke ontdekkingsreiziger bereikte Amerika in 1492?", "Christoffel Columbus"],
+    ["Welk Joods meisje schreef een dagboek in het Achterhuis in Amsterdam?", "Anne Frank"],
+    ["Welke Zuid-Afrikaan zat 27 jaar gevangen en werd daarna president?", "Nelson Mandela"],
+    ["In welk jaar eindigde de Eerste Wereldoorlog?", "1918"],
+    ["Welke Romeinse stad werd in het jaar 79 bedolven door de Vesuvius?", "Pompeï"],
+    ["Wie won de Amerikaanse presidentsverkiezingen van 2024?", "Donald Trump"],
+    ["Wie was president van de Verenigde Staten van 2021 tot begin 2025?", "Joe Biden"],
+    ["Welk bouwwerk van duizenden kilometers moest China beschermen tegen invallen?", "De Chinese Muur"],
+    ["Wie werd in februari 2025 premier van België?", "Bart De Wever"],
+    ["Van welk rijk was Julius Caesar de leider?", "Het Romeinse Rijk"],
+    ["Wie is sinds 2000 de sterke man van Rusland?", "Vladimir Poetin"],
+    ["Welke vrouw was bondskanselier van Duitsland van 2005 tot 2021?", "Angela Merkel"],
+    ["In welke West-Vlaamse stad staat de Menenpoort?", "Ieper"],
+    ["Welke Franse heldin stierf in 1431 op de brandstapel?", "Jeanne d'Arc"],
+    ["Welk gebouw in Washington werd bestormd op 6 januari 2021?", "Het Capitool"],
+    ["Welke uitvinding liet Alexander Graham Bell in 1876 patenteren?", "De telefoon"],
+    ["In welk jaar waren er aanslagen in de luchthaven van Zaventem en metrostation Maalbeek?", "2016"],
+    ["Welke miljardair kocht Twitter in 2022 en doopte het om tot X?", "Elon Musk"],
+    ["Welke Britse premier kreeg de bijnaam 'Iron Lady'?", "Margaret Thatcher"],
+    ["In welke kerncentrale in Oekraïne gebeurde in 1986 een zware ramp?", "Tsjernobyl"],
+    ["Hoe heetten de Scandinavische zeevaarders die in de vroege middeleeuwen Europa plunderden?", "De Vikingen"],
+    ["Welke koning der Belgen trad af in 2013?", "Albert II"],
+    ["Wie werd in 2017 president van Frankrijk en in 2022 herkozen?", "Emmanuel Macron"],
+    ["Op welke twee Japanse steden viel in 1945 een atoombom?", "Hiroshima en Nagasaki"],
+    ["Wie hield de beroemde toespraak 'I have a dream'?", "Martin Luther King"],
+    ["Welke Britse prinses stierf in 1997 bij een auto-ongeluk in Parijs?", "Prinses Diana"],
+    ["Welke Belgische koning maakte van Congo zijn privébezit?", "Leopold II"],
+    ["Welke uitvinding van Gutenberg veranderde rond 1450 de wereld?", "De boekdrukkunst"],
+    ["Welke Engelse koning had zes vrouwen?", "Hendrik VIII"],
+    ["Naar welk beroemd scheepswrak dook de duikboot Titan toen ze in 2023 implodeerde?", "De Titanic"],
+    ["Welke prinses is de troonopvolgster van België?", "Prinses Elisabeth"],
+    ["Wie werd in 2024 premier van het Verenigd Koninkrijk?", "Keir Starmer"],
+    ["Welke Zweedse tiener begon in 2018 te spijbelen voor het klimaat?", "Greta Thunberg"]
+  ],
+  paars: [
+    ["Wie schilderde de Mona Lisa?", "Leonardo da Vinci"],
+    ["Wie schreef de Harry Potter-boeken?", "J.K. Rowling"],
+    ["Welke Nederlandse schilder sneed een stuk van zijn eigen oor af?", "Vincent van Gogh"],
+    ["In welk museum hangt de Mona Lisa?", "Het Louvre"],
+    ["Welke Belgische stripheld heeft een hondje dat Bobbie heet?", "Kuifje"],
+    ["Wie schreef 'Romeo en Julia'?", "William Shakespeare"],
+    ["Welke Belgische schilder zette onder een pijp de woorden 'Ceci n'est pas une pipe'?", "René Magritte"],
+    ["Welke anonieme straatkunstenaar liet in 2018 een werk versnipperen tijdens een veiling?", "Banksy"],
+    ["Uit welk land komen mangastrips?", "Japan"],
+    ["Wie schreef 'De Da Vinci Code'?", "Dan Brown"],
+    ["Welke twee striphelden verdedigen hun Gallische dorp tegen de Romeinen?", "Asterix en Obelix"],
+    ["Welke Spaanse kunstenaar schilderde 'Guernica'?", "Pablo Picasso"],
+    ["Welke detective woont in Baker Street 221B?", "Sherlock Holmes"],
+    ["Welke Vlaamse barokschilder woonde en werkte in Antwerpen en schilderde 'De Kruisafneming'?", "Peter Paul Rubens"],
+    ["Wie schreef 'In de Ban van de Ring'?", "J.R.R. Tolkien"],
+    ["Welke blauwe stripfiguurtjes bedacht de Belgische tekenaar Peyo?", "De Smurfen"],
+    ["Welk beroemd altaarstuk van de gebroeders Van Eyck hangt in de Sint-Baafskathedraal in Gent?", "Het Lam Gods"],
+    ["Welke Belgische detective met snor bedacht Agatha Christie?", "Hercule Poirot"],
+    ["Welke kunstenaar beschilderde het plafond van de Sixtijnse Kapel?", "Michelangelo"],
+    ["Hoe heet het plassende beeldje in Brussel?", "Manneken Pis"],
+    ["Uit welk boek van George Orwell komt 'Big Brother'?", "1984"],
+    ["Hoe heet de sterkste man in de strips van Suske en Wiske?", "Jerom"],
+    ["Welke Franse schilder is bekend om zijn waterlelies?", "Claude Monet"],
+    ["Wie schilderde 'Meisje met de parel'?", "Johannes Vermeer"],
+    ["Wie schilderde 'De Nachtwacht'?", "Rembrandt"],
+    ["Welke popartkunstenaar maakte zeefdrukken van soepblikken en Marilyn Monroe?", "Andy Warhol"],
+    ["Welke boekenreeks van Suzanne Collins speelt zich af in Panem?", "The Hunger Games"],
+    ["Welke Noorse schilder maakte 'De Schreeuw'?", "Edvard Munch"],
+    ["Welke schrijfster van 'It Ends with Us' werd razend populair dankzij BookTok?", "Colleen Hoover"],
+    ["Hoe heet de Japanse kunst van het papiervouwen?", "Origami"],
+    ["Welke architect ontwierp de Sagrada Família?", "Antoni Gaudí"],
+    ["Welke Vlaamse schrijver schreef 'Het verdriet van België'?", "Hugo Claus"],
+    ["Welke taal spraken de oude Romeinen?", "Latijn"],
+    ["Welk stuk fruit plakte kunstenaar Maurizio Cattelan met ducttape aan de muur?", "Een banaan"],
+    ["Hoeveel snaren heeft een gewone gitaar?", "Zes"],
+    ["Welke componist schreef zijn Negende Symfonie toen hij al doof was?", "Ludwig van Beethoven"],
+    ["Welk sprookjesfiguur verliest een glazen muiltje op het bal?", "Assepoester"],
+    ["Welke Deense schrijver schreef 'De kleine zeemeermin'?", "Hans Christian Andersen"],
+    ["Uit welke Belgische stad komen modeontwerpers als Dries Van Noten en Ann Demeulemeester?", "Antwerpen"],
+    ["Welke Vlaamse tekenaar bedacht Jommeke?", "Jef Nys"],
+    ["In welke Spaanse stad staat het Guggenheim-museum van architect Frank Gehry?", "Bilbao"],
+    ["Wie schreef 'De kleine prins'?", "Antoine de Saint-Exupéry"],
+    ["Hoe heet de kunst van het schilderen met spuitbussen op muren?", "Graffiti"],
+    ["Welke Spaanse schilder is bekend om zijn smeltende klokken?", "Salvador Dalí"],
+    ["In welke Italiaanse stad staat het beeld van David door Michelangelo?", "Florence"],
+    ["Welk instrument heeft 88 toetsen?", "De piano"],
+    ["Welke schrijver bedacht 'Sjakie en de chocoladefabriek' en 'De GVR'?", "Roald Dahl"],
+    ["In welke stripreeks van Merho spelen Marcel, Charlotte, Fanny en Konstantinopel mee?", "De Kiekeboes"],
+    ["Wat is het eerste boek van de Bijbel?", "Genesis"],
+    ["Voor welke bouwstijl van rond 1900 is de Brusselse architect Victor Horta bekend?", "Art nouveau"],
+    ["Welke stripcowboy schiet sneller dan zijn schaduw?", "Lucky Luke"],
+    ["Welke taal heeft de meeste moedertaalsprekers ter wereld?", "Chinees (Mandarijn)"],
+    ["Welke schrijver bedacht de boeken waarop 'Game of Thrones' gebaseerd is?", "George R.R. Martin"]
+  ],
+  groen: [
+    ["Welke planeet staat het dichtst bij de zon?", "Mercurius"],
+    ["Wat is de chemische formule van water?", "H₂O"],
+    ["Wat is het grootste dier ter wereld?", "De blauwe vinvis"],
+    ["Hoeveel poten heeft een spin?", "Acht"],
+    ["Welk bedrijf maakt de iPhone?", "Apple"],
+    ["Welke chatbot van OpenAI kwam eind 2022 uit en maakte AI bekend bij het grote publiek?", "ChatGPT"],
+    ["Welke planeet noemen we de rode planeet?", "Mars"],
+    ["Welk gas hebben mensen nodig om te ademen?", "Zuurstof"],
+    ["Wat is het grootste orgaan van het menselijk lichaam?", "De huid"],
+    ["Wat is het snelste landdier?", "Het jachtluipaard (de cheeta)"],
+    ["Welke ruimtetelescoop werd eind 2021 gelanceerd als opvolger van Hubble?", "De James Webb-telescoop"],
+    ["Welk automerk van Elon Musk bouwt alleen elektrische wagens?", "Tesla"],
+    ["Hoeveel planeten telt ons zonnestelsel?", "Acht"],
+    ["Welk orgaan pompt het bloed door je lichaam?", "Het hart"],
+    ["Welke wetenschapper bedacht de relativiteitstheorie?", "Albert Einstein"],
+    ["Welk zwart-wit dier staat in het logo van het WWF?", "De reuzenpanda"],
+    ["Hoeveel poten heeft een insect?", "Zes"],
+    ["Welk vogeltje kan achteruit vliegen?", "De kolibrie"],
+    ["Hoe heet het proces waarbij planten zonlicht omzetten in energie?", "Fotosynthese"],
+    ["Welk bedrijf zit achter Facebook, Instagram en WhatsApp?", "Meta"],
+    ["Wat is de grootste planeet van ons zonnestelsel?", "Jupiter"],
+    ["Bij hoeveel graden Celsius kookt water?", "100 graden"],
+    ["Wat is het enige zoogdier dat echt kan vliegen?", "De vleermuis"],
+    ["Wat meet je met een thermometer?", "De temperatuur"],
+    ["Hoe heet de reusachtige raket van SpaceX, de grootste ooit gebouwd?", "Starship"],
+    ["Welk metaal is vloeibaar bij kamertemperatuur?", "Kwik"],
+    ["Hoeveel harten heeft een octopus?", "Drie"],
+    ["Welke vitamine maakt je lichaam aan dankzij zonlicht?", "Vitamine D"],
+    ["Wat is het hardste natuurlijke materiaal?", "Diamant"],
+    ["Welke vleesetende dinosaurus is bekend om zijn korte voorpootjes?", "Tyrannosaurus rex"],
+    ["Hoe heet de ster in het midden van ons zonnestelsel?", "De zon"],
+    ["Welke app voor korte filmpjes is van het Chinese bedrijf ByteDance?", "TikTok"],
+    ["Welk Australisch dier draagt zijn jong in een buidel en verplaatst zich al springend?", "De kangoeroe"],
+    ["Wat is de wetenschappelijke naam van de moderne mens?", "Homo sapiens"],
+    ["Met welke drie letters duiden we ons erfelijk materiaal aan?", "DNA"],
+    ["Hoeveel tanden heeft een volwassen mens, verstandskiezen inbegrepen?", "32"],
+    ["Welke geleerde bedacht de wetten van de zwaartekracht, volgens de legende na een vallende appel?", "Isaac Newton"],
+    ["Welke mensaap is het nauwst verwant aan de mens?", "De chimpansee (en de bonobo)"],
+    ["Welk hemellichaam draait rond de aarde?", "De maan"],
+    ["Van welke boom komen eikels?", "De eik"],
+    ["Welk bedrijf maakt Android en de bekendste zoekmachine ter wereld?", "Google"],
+    ["Hoe heet het NASA-programma dat opnieuw mensen naar de maan stuurt?", "Artemis"],
+    ["In welke eenheid meten we elektrische spanning?", "Volt"],
+    ["Wat is het hoogste dier ter wereld?", "De giraf"],
+    ["In welk dier verandert een rups?", "Een vlinder"],
+    ["Welke digitale munt werd in 2009 bedacht door de mysterieuze Satoshi Nakamoto?", "Bitcoin"],
+    ["Voor welk broeikasgas staat de formule CO₂?", "Koolstofdioxide (koolzuurgas)"],
+    ["Wie was in 1992 de eerste Belg in de ruimte?", "Dirk Frimout"],
+    ["Welk hormoon regelt je bloedsuiker en moeten veel diabetespatiënten inspuiten?", "Insuline"],
+    ["Ongeveer hoeveel procent van het aardoppervlak is bedekt met water?", "Ongeveer 70 procent"],
+    ["Welke vogel kan niet vliegen, zwemt uitstekend en leeft op Antarctica?", "De pinguïn"],
+    ["Welk edelmetaal heeft als symbool Au?", "Goud"],
+    ["Welk diabetesmedicijn werd wereldwijd een hype als afslankprik?", "Ozempic"],
+    ["Ongeveer hoeveel minuten heeft zonlicht nodig om de aarde te bereiken?", "Ongeveer 8 minuten"]
+  ],
+  oranje: [
+    ["Welk land won het WK voetbal van 2022?", "Argentinië"],
+    ["In welke stad vonden de Olympische Zomerspelen van 2024 plaats?", "Parijs"],
+    ["Welke Belgische wielrenner won in 2024 olympisch goud in de wegrit én de tijdrit?", "Remco Evenepoel"],
+    ["Hoeveel spelers heeft een voetbalploeg op het veld?", "Elf"],
+    ["Welke Nederlandse coureur werd van 2021 tot 2024 vier keer op rij wereldkampioen Formule 1?", "Max Verstappen"],
+    ["In welke atletiekdiscipline won Nafi Thiam drie keer olympisch goud?", "De zevenkamp"],
+    ["Welke Sloveen won de Tour de France in 2020, 2021, 2024 en 2025?", "Tadej Pogačar"],
+    ["Hoeveel ringen telt het olympische logo?", "Vijf"],
+    ["Welke Serviër won 24 grandslamtitels, een record bij de mannen?", "Novak Djokovic"],
+    ["Welke kleur heeft de trui van de leider in de Tour de France?", "Geel"],
+    ["Welke Jamaicaan heeft het wereldrecord op de 100 meter?", "Usain Bolt"],
+    ["Wat is de bijnaam van de Belgische nationale voetbalploeg bij de mannen?", "De Rode Duivels"],
+    ["In welke sport is de Amerikaanse Simone Biles een superster?", "Turnen"],
+    ["Welk land won het EK voetbal van 2024?", "Spanje"],
+    ["Hoeveel punten is de roos in het midden van een dartsbord waard?", "50"],
+    ["Welke Rode Duivel verliet Manchester City in 2025 voor Napoli?", "Kevin De Bruyne"],
+    ["Welke basketbalster heeft de bijnaam 'King James'?", "LeBron James"],
+    ["In welk bordspel koop je straten en zet je er huizen en hotels op?", "Monopoly"],
+    ["Hoeveel velden telt een schaakbord?", "64"],
+    ["In welke sport zwem, fiets en loop je na elkaar?", "Triatlon"],
+    ["Welke Limburgse tennisster won vier grandslamtitels en werd als mama opnieuw nummer één?", "Kim Clijsters"],
+    ["Welke racketsport speel je met vier in een kooi met glazen wanden?", "Padel"],
+    ["Hoeveel kilometer is een marathon, afgerond?", "42 kilometer"],
+    ["Welke Argentijn won acht keer de Gouden Bal?", "Lionel Messi"],
+    ["In welk kaartspel roep je de naam van het spel als je nog één kaart hebt?", "UNO"],
+    ["Welke wielerklassieker noemen ze 'Vlaanderens Mooiste'?", "De Ronde van Vlaanderen"],
+    ["In welke sport kun je een hole-in-one slaan?", "Golf"],
+    ["Welk land organiseerde het WK voetbal van 2022?", "Qatar"],
+    ["Hoe heet de Belgische hockeyploeg die olympisch goud won in Tokio?", "De Red Lions"],
+    ["In welke game bouw je met blokken en moet je oppassen voor Creepers?", "Minecraft"],
+    ["Op welke ondergrond wordt Roland Garros gespeeld?", "Gravel"],
+    ["Welke Nederlandse wielrenner is de kleinzoon van Raymond Poulidor?", "Mathieu van der Poel"],
+    ["Welke Belgische wielrenner uit Herentals won in 2022 de groene trui in de Tour de France?", "Wout van Aert"],
+    ["Welke Amerikaanse zwemmer won 23 keer olympisch goud?", "Michael Phelps"],
+    ["Welke Belgische eersteklasser speelt net als Cercle in het Jan Breydelstadion?", "Club Brugge"],
+    ["Welke Portugese voetballer heeft de bijnaam CR7?", "Cristiano Ronaldo"],
+    ["Welke Franse spits verhuisde in 2024 van Paris Saint-Germain naar Real Madrid?", "Kylian Mbappé"],
+    ["Welke Japanse vechtsport betekent letterlijk 'zachte weg'?", "Judo"],
+    ["Met hoeveel pionnen begint elke speler een schaakpartij?", "Acht"],
+    ["Hoe heet de finale van het American football, bekend om zijn halftime show?", "De Super Bowl"],
+    ["Welke game met honderd spelers per potje is bekend om zijn dansjes en de Battle Bus?", "Fortnite"],
+    ["Welke stad organiseert de Olympische Zomerspelen van 2028?", "Los Angeles"],
+    ["In welk land vonden de Olympische Winterspelen van 2026 plaats?", "Italië (Milaan en Cortina)"],
+    ["In welk bordspel ruil je hout, graan en erts om dorpen en steden te bouwen?", "Catan"],
+    ["Welke Spanjaard won veertien keer Roland Garros?", "Rafael Nadal"],
+    ["Welke Engelse tiener werd begin 2025 op zijn zeventiende wereldkampioen darts?", "Luke Littler"],
+    ["Welke sport spelen ze op het gras van Wimbledon?", "Tennis"],
+    ["Hoeveel spelers heeft een volleybalploeg op het veld?", "Zes"],
+    ["Welke Belgische doelman won in 2022 de Champions League met Real Madrid?", "Thibaut Courtois"],
+    ["Welke Franse club won in 2025 voor het eerst de Champions League?", "Paris Saint-Germain"],
+    ["Welke drie landen organiseerden samen het WK voetbal van 2026?", "De Verenigde Staten, Canada en Mexico"],
+    ["Voor welk Italiaans Formule 1-team rijdt Lewis Hamilton sinds 2025?", "Ferrari"],
+    ["Welke Britse McLaren-coureur werd in 2025 wereldkampioen Formule 1?", "Lando Norris"],
+    ["Welke cijfers vul je in bij een klassieke sudoku?", "De cijfers 1 tot en met 9"]
+  ]
+};
+
+const THEMAS = [
+  { id: "blauw",  kleur: "Blauw",  thema: "Aardrijkskunde",       bg: "var(--c-blauw)",  inkt: "var(--on-dark)" },
+  { id: "roze",   kleur: "Roze",   thema: "Film, tv & muziek",    bg: "var(--c-roze)",   inkt: "var(--on-light)" },
+  { id: "geel",   kleur: "Geel",   thema: "Geschiedenis & actua", bg: "var(--c-geel)",   inkt: "var(--on-light)" },
+  { id: "paars",  kleur: "Paars",  thema: "Kunst & cultuur",      bg: "var(--c-paars)",  inkt: "var(--on-dark)" },
+  { id: "groen",  kleur: "Groen",  thema: "Wetenschap & natuur",  bg: "var(--c-groen)",  inkt: "var(--on-light)" },
+  { id: "oranje", kleur: "Oranje", thema: "Sport & vrije tijd",   bg: "var(--c-oranje)", inkt: "var(--on-light)" }
+];
+const OGEN = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+const WOORD = ["", "Eén", "Twee", "Drie", "Vier", "Vijf", "Zes"];
+const SLEUTEL = "vragenbak-v1";
+const $ = (id) => document.getElementById(id);
+
+/* Bewaard op dit toestel: welke vragen al geweest zijn en de vijfde kleur. */
+let bak = { gezien: {}, vijfde: "paars" };
+try {
+  const oud = JSON.parse(localStorage.getItem(SLEUTEL));
+  if (oud && typeof oud === "object") bak = { gezien: oud.gezien || {}, vijfde: oud.vijfde === "bruin" ? "bruin" : "paars" };
+} catch (e) {}
+function bewaar() { try { localStorage.setItem(SLEUTEL, JSON.stringify(bak)); } catch (e) {} }
+
+/* Eerlijke willekeur: geheel getal van 0 tot n-1. */
+function willekeurig(n) {
+  try {
+    const max = Math.floor(0x100000000 / n) * n;
+    const buf = new Uint32Array(1);
+    do { crypto.getRandomValues(buf); } while (buf[0] >= max);
+    return buf[0] % n;
+  } catch (e) { return Math.floor(Math.random() * n); }
+}
+
+const staat = { worp: 0, scherm: "start", thema: null, index: -1, getoond: false, herschud: false };
+let rolt = false;
+
+function themaVan(id) { return THEMAS.find((t) => t.id === id); }
+
+function pasVijfdeToe() {
+  const t = themaVan("paars");
+  const bruin = bak.vijfde === "bruin";
+  t.kleur = bruin ? "Bruin" : "Paars";
+  t.bg = bruin ? "var(--c-bruin)" : "var(--c-paars)";
+  $("kies-paars").setAttribute("aria-pressed", String(!bruin));
+  $("kies-bruin").setAttribute("aria-pressed", String(bruin));
+}
+
+function tekenRooster() {
+  const rooster = $("rooster");
+  rooster.textContent = "";
+  THEMAS.forEach((t) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "vak";
+    b.style.background = t.bg;
+    b.style.color = t.inkt;
+    const k = document.createElement("span"); k.className = "vak-kleur"; k.textContent = t.kleur;
+    const n = document.createElement("span"); n.className = "vak-thema"; n.textContent = t.thema;
+    b.append(k, n);
+    b.addEventListener("click", () => nieuweVraag(t.id));
+    rooster.append(b);
+  });
+}
+
+function tekenSteen(n) {
+  const steen = $("steen");
+  if (!steen.children.length) for (let i = 0; i < 9; i++) steen.append(document.createElement("span"));
+  const aan = OGEN[n] || OGEN[5];
+  [...steen.children].forEach((s, i) => s.classList.toggle("aan", aan.includes(i)));
+}
+
+function toonWorp() {
+  if (!staat.worp) {
+    tekenSteen(5);
+    $("worp-groot").textContent = "Gooi";
+    $("worp-klein").textContent = "Tik om te gooien";
+    return;
+  }
+  tekenSteen(staat.worp);
+  $("worp-groot").textContent = WOORD[staat.worp];
+  $("worp-klein").textContent = staat.worp === 1 ? "Zet je pion 1 vakje verder" : "Zet je pion " + staat.worp + " vakjes verder";
+}
+
+function gooi() {
+  if (rolt) return;
+  houWakker();
+  const uitkomst = willekeurig(6) + 1;
+  const rustig = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (rustig) { staat.worp = uitkomst; toonWorp(); return; }
+  rolt = true;
+  const steen = $("steen");
+  steen.classList.remove("rolt");
+  void steen.offsetWidth;
+  steen.classList.add("rolt");
+  $("worp-groot").textContent = "…";
+  $("worp-klein").textContent = "De steen rolt";
+  const flits = setInterval(() => tekenSteen(willekeurig(6) + 1), 80);
+  setTimeout(() => {
+    clearInterval(flits);
+    steen.classList.remove("rolt");
+    staat.worp = uitkomst;
+    toonWorp();
+    rolt = false;
+    try { navigator.vibrate && navigator.vibrate(30); } catch (e) {}
+  }, 700);
+}
+
+function nieuweVraag(id) {
+  houWakker();
+  const lijst = VRAGEN[id];
+  let gezien = (bak.gezien[id] || []).filter((i) => i >= 0 && i < lijst.length);
+  let over = lijst.map((_, i) => i).filter((i) => !gezien.includes(i));
+  staat.herschud = false;
+  if (!over.length) { gezien = []; over = lijst.map((_, i) => i); staat.herschud = true; }
+  const index = over[willekeurig(over.length)];
+  gezien.push(index);
+  bak.gezien[id] = gezien;
+  bewaar();
+  staat.thema = id; staat.index = index; staat.getoond = false; staat.scherm = "vraag";
+  teken();
+  window.scrollTo(0, 0);
+}
+
+function naarStart() {
+  staat.scherm = "start";
+  teken();
+  window.scrollTo(0, 0);
+}
+
+function telOver() {
+  let totaal = 0, over = 0;
+  THEMAS.forEach((t) => {
+    const n = VRAGEN[t.id].length;
+    totaal += n;
+    over += n - Math.min(n, (bak.gezien[t.id] || []).length);
+  });
+  $("teller").textContent = "Nog " + over + " van de " + totaal + " vragen niet gezien op dit toestel.";
+}
+
+function teken() {
+  const opVraag = staat.scherm === "vraag" && staat.thema && VRAGEN[staat.thema] && VRAGEN[staat.thema][staat.index];
+  $("start").hidden = !!opVraag;
+  $("vraag").hidden = !opVraag;
+  document.body.classList.toggle("is-vraag", !!opVraag);
+  if (opVraag) {
+    const t = themaVan(staat.thema);
+    const [v, a] = VRAGEN[staat.thema][staat.index];
+    document.body.style.setProperty("--cat", t.bg);
+    document.body.style.setProperty("--cat-ink", t.inkt);
+    $("vraag-kleur").textContent = t.kleur;
+    $("vraag-thema").textContent = t.thema;
+    $("vraag-tekst").textContent = v;
+    $("antwoord-tekst").textContent = a;
+    $("melding").hidden = !staat.herschud;
+    $("antwoord").hidden = !staat.getoond;
+    $("toon").hidden = staat.getoond;
+    $("andere").hidden = staat.getoond;
+    $("volgende").hidden = !staat.getoond;
+    $("tip").hidden = !staat.getoond;
+  } else {
+    toonWorp();
+    telOver();
+  }
+}
+
+/* Scherm aanhouden tijdens het spel, waar het toestel dat toelaat. */
+let slot = null;
+function houWakker() {
+  try {
+    if (slot || !navigator.wakeLock) return;
+    navigator.wakeLock.request("screen").then((s) => {
+      slot = s;
+      s.addEventListener("release", () => { slot = null; });
+    }).catch(() => {});
+  } catch (e) {}
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && staat.worp) houWakker(); });
+
+function start(vorig) {
+  if (vorig && typeof vorig === "object") {
+    if (vorig.worp >= 1 && vorig.worp <= 6) staat.worp = vorig.worp;
+    if (vorig.scherm === "vraag" && VRAGEN[vorig.thema] && VRAGEN[vorig.thema][vorig.index]) {
+      staat.scherm = "vraag"; staat.thema = vorig.thema; staat.index = vorig.index; staat.getoond = !!vorig.getoond;
+    }
+  }
+  pasVijfdeToe();
+  tekenRooster();
+
+  $("worp").addEventListener("click", gooi);
+  $("lot").addEventListener("click", () => nieuweVraag(THEMAS[willekeurig(THEMAS.length)].id));
+  $("terug").addEventListener("click", naarStart);
+  $("volgende").addEventListener("click", naarStart);
+  $("andere").addEventListener("click", () => nieuweVraag(staat.thema));
+  $("toon").addEventListener("click", () => { staat.getoond = true; teken(); });
+
+  const kiesVijfde = (welke) => { bak.vijfde = welke; bewaar(); pasVijfdeToe(); tekenRooster(); };
+  $("kies-paars").addEventListener("click", () => kiesVijfde("paars"));
+  $("kies-bruin").addEventListener("click", () => kiesVijfde("bruin"));
+
+  const toonZeker = (aan) => { $("reset-zeker").hidden = !aan; $("reset-start").hidden = aan; };
+  $("reset").addEventListener("click", () => toonZeker(true));
+  $("reset-nee").addEventListener("click", () => toonZeker(false));
+  $("reset-ja").addEventListener("click", () => { bak.gezien = {}; bewaar(); telOver(); toonZeker(false); });
+
+  teken();
+}
+
+try {
+  window.claude?.hot?.snapshot?.(() => ({
+    worp: staat.worp, scherm: staat.scherm, thema: staat.thema, index: staat.index, getoond: staat.getoond
+  }));
+} catch (e) {}
+if (window.claude?.hot?.ready) window.claude.hot.ready(start);
+else start(window.claude?.hot?.data ?? {});
+</script>
