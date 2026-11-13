@@ -188,6 +188,31 @@ h1, h2, p, ol { margin: 0; }
 }
 .antwoord .label { color: inherit; opacity: .85; }
 .antwoord-tekst { font-family: var(--display); font-weight: 800; font-size: 1.5rem; line-height: 1.2; overflow-wrap: anywhere; }
+/* Niveaukeuze */
+.niveaus { display: flex; flex-direction: column; gap: 10px; }
+.niveau {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--r-md);
+  text-align: left;
+  transition: transform .12s ease;
+}
+.niveau:active { transform: scale(.98); }
+.niveau.worp { background: var(--ink); color: var(--bg); }
+.niveau-tekst { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.niveau-naam { font-family: var(--display); font-weight: 800; font-size: 1.375rem; line-height: 1.15; }
+.niveau-sub { font-size: .9375rem; opacity: .8; }
+.niveau-merk {
+  flex: none;
+  font-size: .72rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase;
+  padding: 5px 10px; border-radius: 999px;
+  background: var(--cat); color: var(--cat-ink);
+}
+.worp-niveau { font-size: .9375rem; font-weight: 600; }
+.zones { padding-left: 1.25em; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+
 .acties { display: flex; flex-direction: column; gap: 10px; }
 .acties .knop { width: 100%; padding: 15px 18px; font-size: 1.0625rem; }
 .tip { color: var(--muted); font-size: .9375rem; text-align: center; }
@@ -206,7 +231,7 @@ h1, h2, p, ol { margin: 0; }
     <div class="wrap-in" style="display:flex;flex-direction:column;gap:18px">
       <header class="kop">
         <h1>De Vragenbak</h1>
-        <p>Vragen en dobbelsteen bij jullie bord</p>
+        <p>Vragen in drie niveaus en een dobbelsteen</p>
       </header>
 
       <button class="worp" id="worp" type="button" aria-describedby="worp-klein">
@@ -215,6 +240,7 @@ h1, h2, p, ol { margin: 0; }
           <span class="label">Dobbelsteen</span>
           <span class="worp-groot" id="worp-groot">Gooi</span>
           <span class="worp-klein" id="worp-klein">Tik om te gooien</span>
+          <span class="worp-niveau" id="worp-niveau" hidden></span>
         </span>
       </button>
 
@@ -230,11 +256,24 @@ h1, h2, p, ol { margin: 0; }
           <div class="blok">
             <p class="label">Zo speel je</p>
             <ol>
-              <li>Gooi de dobbelsteen en verzet je pion op het bord.</li>
+              <li>Gooi de dobbelsteen en verzet je speelschijf op het wiel.</li>
               <li>Tik de kleur aan van het vakje waar je op landt. In het midden kies je zelf.</li>
+              <li>Kies het niveau. Volgens het regelboekje bepaalt je worp het niveau: 1 of 2 is makkelijk, 3 of 4 gemiddeld, 5 of 6 moeilijk. Jullie mogen ook afspreken dat iedereen elke beurt vrij kiest.</li>
               <li>Een andere speler neemt de gsm, leest de vraag voor en tikt daarna op ‘Toon antwoord’.</li>
-              <li>Juist? Dan gooi je opnieuw. Fout? Dan is de volgende speler aan de beurt.</li>
+              <li>Juist? Zet je loper op de buitenbaan vooruit: 1 vakje voor makkelijk, 2 voor gemiddeld, 3 voor moeilijk. Daarna gooi je opnieuw. Fout? Dan is de volgende speler aan de beurt.</li>
+              <li>Wie zes partjes heeft, gaat naar het midden en wint met een juist antwoord op de eindvraag.</li>
             </ol>
+          </div>
+          <div class="blok">
+            <p class="label">Zones op de buitenbaan</p>
+            <p>Staat je loper in een zone, dan mag je de kracht van die zone één keer per bezoek gebruiken.</p>
+            <ul class="zones">
+              <li><strong>Makkie Zone:</strong> land je op een partjesvak, dan mag je een makkelijke vraag nemen, wat je ook gooide.</li>
+              <li><strong>Duelzone:</strong> landt een andere speler op een partjesvak, dan mag je een duel uitroepen. Iemand anders leest de vraag voor en wie eerst juist antwoordt, krijgt het partje.</li>
+              <li><strong>Vertraagzone:</strong> verplaats de speelschijf van een tegenspeler naar een vakje naar keuze.</li>
+              <li><strong>Gratis partje:</strong> één vakje op de baan levert een partje naar keuze op.</li>
+            </ul>
+            <p>Op jullie bord kunnen de zones anders heten; de naam staat op de baan zelf.</p>
           </div>
           <div class="blok">
             <p class="label">Vijfde kleur op jullie bord</p>
@@ -270,12 +309,20 @@ h1, h2, p, ol { margin: 0; }
         <p class="vraag-kleur" id="vraag-kleur"></p>
         <p class="vraag-thema" id="vraag-thema"></p>
       </div>
-      <p class="melding" id="melding" hidden>Alle vragen van deze kleur zijn geweest. Ze zijn opnieuw geschud.</p>
+      <p class="melding" id="melding" hidden>Alle vragen van deze kleur en dit niveau zijn geweest. Ze zijn opnieuw geschud.</p>
     </div>
 
-    <article class="kaart">
+    <article class="kaart" id="kaart-niveau">
       <div class="vraag-deel">
-        <p class="label">Vraag</p>
+        <p class="label">Kies het niveau</p>
+        <p id="niveau-uitleg">Hoe moeilijker de vraag, hoe verder je loper mag bij een juist antwoord.</p>
+      </div>
+      <div class="niveaus" id="niveaus"></div>
+    </article>
+
+    <article class="kaart" id="kaart-vraag">
+      <div class="vraag-deel">
+        <p class="label" id="vraag-label">Vraag</p>
         <h2 id="vraag-tekst"></h2>
       </div>
       <div class="antwoord" id="antwoord" hidden>
@@ -295,381 +342,811 @@ h1, h2, p, ol { margin: 0; }
 
 <script>
 const VRAGEN = {
-  blauw: [
-    ["Wat is de hoofdstad van Australië?", "Canberra"],
-    ["Welk land heeft sinds 2023 de meeste inwoners ter wereld?", "India"],
-    ["In welk land vind je de Inca-stad Machu Picchu?", "Peru"],
-    ["Wat is de hoofdstad van Canada?", "Ottawa"],
-    ["Wat is het grootste eiland ter wereld?", "Groenland"],
-    ["Welk land wil sinds 2022 officieel 'Türkiye' genoemd worden?", "Turkije"],
-    ["Hoe heet het hoogste punt van België?", "Signaal van Botrange"],
-    ["Welk kanaal in Egypte raakte in 2021 geblokkeerd door het containerschip Ever Given?", "Het Suezkanaal"],
-    ["Welk Noord-Europees land werd in 2023 het 31ste lid van de NAVO?", "Finland"],
-    ["In welk land ligt de Kilimanjaro?", "Tanzania"],
-    ["Welk land aan de Adriatische Zee stapte in 2023 over op de euro?", "Kroatië"],
-    ["Welke Belgische kuststad wordt 'de Koningin der Badsteden' genoemd?", "Oostende"],
-    ["Wat is de hoofdstad van Turkije?", "Ankara"],
-    ["Hoe heet de beroemde rode rots in het midden van Australië?", "Uluru (Ayers Rock)"],
-    ["Welke stad is de hoofdstad van Wallonië?", "Namen"],
-    ["In welk land ligt Transsylvanië, de streek van graaf Dracula?", "Roemenië"],
-    ["Bij welk koninkrijk hoort Groenland?", "Denemarken"],
-    ["Welke golf wilde president Trump in 2025 omdopen tot 'Golf van Amerika'?", "De Golf van Mexico"],
-    ["Wat is de hoofdstad van Nieuw-Zeeland?", "Wellington"],
-    ["Wat is de langste rivier van Europa?", "De Wolga"],
-    ["Welk Scandinavisch land telt de meeste eilanden ter wereld?", "Zweden"],
-    ["Hoe heet de zeestraat die Istanbul in een Europees en een Aziatisch deel splitst?", "De Bosporus"],
-    ["Wat is de hoofdstad van Marokko?", "Rabat"],
-    ["In welk land ligt het tempelcomplex Angkor Wat?", "Cambodja"],
-    ["Welke hoofdstad ligt recht tegenover Kinshasa, aan de andere oever van de Congostroom?", "Brazzaville"],
-    ["Wat is de hoogste berg van de Alpen?", "De Mont Blanc"],
-    ["Wat is de hoofdstad van Zwitserland?", "Bern"],
-    ["Welk land heeft de langste kustlijn ter wereld?", "Canada"],
-    ["Welke woestijn in het noorden van Chili geldt als de droogste ter wereld?", "De Atacama"],
-    ["Welk Russisch meer is het diepste ter wereld?", "Het Baikalmeer"],
-    ["Welke Belgische provincie is de grootste in oppervlakte?", "Luxemburg"],
-    ["Welke Belgische provincie is de kleinste in oppervlakte?", "Waals-Brabant"],
-    ["Wat is de hoofdstad van de provincie Vlaams-Brabant?", "Leuven"],
-    ["Wat is de hoofdstad van Brazilië?", "Brasília"],
-    ["Welk ministaatje ligt in de Pyreneeën tussen Frankrijk en Spanje?", "Andorra"],
-    ["Welk zoutmeer tussen Israël en Jordanië is het laagste punt op aarde?", "De Dode Zee"],
-    ["Hoe heet het land dat vroeger Birma werd genoemd?", "Myanmar"],
-    ["Wat is de hoofdstad van Vietnam?", "Hanoi"],
-    ["Welke rivier stroomt door Wenen, Boedapest en Belgrado?", "De Donau"],
-    ["Welk Afrikaans koninkrijk heette tot 2018 Swaziland?", "Eswatini"],
-    ["Welke hoofdstad van Kazachstan heette enkele jaren Nur-Sultan?", "Astana"],
-    ["Welke eilandengroep van Ecuador werd beroemd door Charles Darwin?", "De Galapagoseilanden"],
-    ["Welk Zuid-Amerikaans land heeft Sucre als hoofdstad en La Paz als regeringszetel?", "Bolivia"],
-    ["Hoe heet de kaap op de zuidpunt van Zuid-Amerika?", "Kaap Hoorn"],
-    ["Welke vulkaan op Sicilië is de hoogste actieve vulkaan van Europa?", "De Etna"],
-    ["Wat is de grootste staat van de Verenigde Staten?", "Alaska"],
-    ["Hoe heet de zee-engte tussen Spanje en Marokko?", "De Straat van Gibraltar"],
-    ["Van welk land is Tallinn de hoofdstad?", "Estland"],
-    ["Wat is de hoofdstad van Pakistan?", "Islamabad"],
-    ["Welk Afrikaans land heeft de meeste inwoners?", "Nigeria"],
-    ["Welke rivier sleet de Grand Canyon uit?", "De Colorado"],
-    ["Welke Deense eilandengroep ligt tussen Schotland en IJsland?", "De Faeröer"],
-    ["In welk land ligt de legendarische woestijnstad Timboektoe?", "Mali"],
-    ["Welke republiek ligt, net als Vaticaanstad, volledig binnen Italië?", "San Marino"],
-    ["Wat is de hoofdstad van Zuid-Korea?", "Seoel"]
-  ],
-  roze: [
-    ["Wie speelt Wednesday Addams in de Netflix-reeks 'Wednesday'?", "Jenna Ortega"],
-    ["Welke film over de vader van de atoombom won in 2024 de Oscar voor beste film?", "Oppenheimer"],
-    ["Welk land won het Eurovisiesongfestival 2024 met Nemo?", "Zwitserland"],
-    ["Welke Italiaanse rockband won het Eurovisiesongfestival 2021?", "Måneskin"],
-    ["Welke zangeres trad zwanger op tijdens de halftime show van de Super Bowl in 2023?", "Rihanna"],
-    ["Welke Brusselse zangeres scoorde met 'Balance ton quoi' en 'Tout oublier'?", "Angèle"],
-    ["Wie zong de zomerhit 'Espresso' in 2024?", "Sabrina Carpenter"],
-    ["In welke reeks speelt Pedro Pascal de smokkelaar Joel, die Ellie moet beschermen?", "The Last of Us"],
-    ["Welke acteur speelde James Bond voor het laatst in 'No Time to Die'?", "Daniel Craig"],
-    ["Welke Vlaamse band maakte het nummer 'Mia'?", "Gorki"],
-    ["Welke zangeres bracht in 2024 het countryalbum 'Cowboy Carter' uit?", "Beyoncé"],
-    ["Welke Zuid-Koreaanse film won in 2020 de Oscar voor beste film?", "Parasite"],
-    ["Welke zanger van 'Blinding Lights' heet in het echt Abel Tesfaye?", "The Weeknd"],
-    ["Welk land won het Eurovisiesongfestival 2025?", "Oostenrijk"],
-    ["Welke musicalfilm uit 2024 met Ariana Grande vertelt over de heksen van Oz?", "Wicked"],
-    ["Welke animatiefilm op Netflix over een meidengroep die op demonen jaagt, werd een hit in 2025?", "KPop Demon Hunters"],
-    ["Welke Britse Netflix-reeks uit 2025 gaat over een jongen van 13 die verdacht wordt van moord?", "Adolescence"],
-    ["Uit welke Disneyfilm komt het lied 'We Don't Talk About Bruno'?", "Encanto"],
-    ["Welke rapper heet in het echt Marshall Mathers?", "Eminem"],
-    ["Wie regisseerde 'Inception', 'Interstellar' en 'Dunkirk'?", "Christopher Nolan"],
-    ["Welke acteur kreeg postuum een Oscar voor zijn rol als de Joker in 'The Dark Knight'?", "Heath Ledger"],
-    ["Welke HBO-reeks volgt de steenrijke mediafamilie Roy?", "Succession"],
-    ["In welke reeks neemt chef-kok Carmy de broodjeszaak van zijn broer in Chicago over?", "The Bear"],
-    ["Welke film van Lukas Dhont over twee boezemvrienden kreeg in 2023 een Oscarnominatie?", "Close"],
-    ["Welke Vlaamse acteur brak door met de hoofdrol in 'Rundskop'?", "Matthias Schoenaerts"],
-    ["Welke Belgische regisseur maakte 'The Broken Circle Breakdown'?", "Felix van Groeningen"],
-    ["Welke zanger van Queen overleed in 1991?", "Freddie Mercury"],
-    ["Welke band bracht in 1973 het album 'The Dark Side of the Moon' uit?", "Pink Floyd"],
-    ["Welke film met Michelle Yeoh won in 2023 zeven Oscars?", "Everything Everywhere All at Once"],
-    ["Welke film over een stripdanseres uit Brooklyn won in 2025 de Oscar voor beste film?", "Anora"],
-    ["Wie won in 1986 als enige Belg ooit het Eurovisiesongfestival?", "Sandra Kim"],
-    ["Welke Antwerpse rockband rond Tom Barman maakte 'Instant Street'?", "dEUS"],
-    ["Welke twee Belgische broers stonden als dj-duo op nummer één in de DJ Mag Top 100?", "Dimitri Vegas & Like Mike"],
-    ["Welke Britse zangeres bracht de albums '19', '21', '25' en '30' uit?", "Adele"],
-    ["Welke Ierse acteur won in 2024 de Oscar voor beste acteur?", "Cillian Murphy"],
-    ["Welke regisseur maakte 'Pulp Fiction' en 'Kill Bill'?", "Quentin Tarantino"],
-    ["In welke film zegt Tom Hanks dat het leven is als een doos chocolaatjes?", "Forrest Gump"],
-    ["Welke reeks volgt de bende van Tommy Shelby in Birmingham?", "Peaky Blinders"],
-    ["In welke Vlaamse reeks infiltreert agent Bob Lemmens bij een Limburgse xtc-baron?", "Undercover"],
-    ["Welke Vlaamse presentator trekt de wereld rond in 'Reizen Waes'?", "Tom Waes"],
-    ["Welke Ierse band zingt 'With or Without You'?", "U2"],
-    ["Welke zangeres heet in het echt Stefani Germanotta?", "Lady Gaga"],
-    ["Welke Spaanse zangeres bracht in 2022 het album 'Motomami' uit?", "Rosalía"],
-    ["Welke Puerto Ricaanse artiest verzorgde de halftime show van de Super Bowl in 2026?", "Bad Bunny"],
-    ["Welk Frans dj-duo met robothelmen stopte ermee in 2021?", "Daft Punk"],
-    ["Welke Japanse studio maakte 'Spirited Away' en 'My Neighbor Totoro'?", "Studio Ghibli"],
-    ["Welke acteur speelt Paul Atreides in de 'Dune'-films?", "Timothée Chalamet"],
-    ["Welke Britse reeks speelt zich af op het landgoed van de familie Crawley?", "Downton Abbey"],
-    ["Wie presenteert 'De Mol' sinds de terugkeer van het programma in 2016?", "Gilles De Coster"],
-    ["Welke Zweedse groep won in 1974 het Eurovisiesongfestival met 'Waterloo'?", "ABBA"],
-    ["Welke Zweedse zangeres won het Eurovisiesongfestival in 2012 én in 2023?", "Loreen"],
-    ["Welke band richtte Dave Grohl op na het einde van Nirvana?", "Foo Fighters"],
-    ["Welke Belgische chansonnier zong 'Ne me quitte pas'?", "Jacques Brel"],
-    ["Welke componist schreef de muziek voor 'Star Wars', 'Jaws' en 'Indiana Jones'?", "John Williams"],
-    ["In welke reeks wordt een Amerikaanse footballcoach trainer van een Engelse voetbalclub?", "Ted Lasso"],
-    ["Wie speelt schaakwonder Beth Harmon in 'The Queen's Gambit'?", "Anya Taylor-Joy"],
-    ["Welke rapper bracht in 2024 'Not Like Us' uit en stond in 2025 op de Super Bowl?", "Kendrick Lamar"]
-  ],
-  geel: [
-    ["In welk jaar viel de Berlijnse Muur?", "1989"],
-    ["In welk jaar eindigde de Eerste Wereldoorlog?", "1918"],
-    ["In welk jaar werd België onafhankelijk?", "1830"],
-    ["Welke naam koos de eerste Amerikaanse paus, verkozen in 2025?", "Leo XIV"],
-    ["Welke paus overleed op paasmaandag 2025?", "Franciscus"],
-    ["Wie werd in februari 2025 premier van België?", "Bart De Wever"],
-    ["Welke Parijse kathedraal brandde in 2019 en ging eind 2024 weer open?", "De Notre-Dame"],
-    ["Welke Romeinse stad werd in het jaar 79 bedolven door de Vesuvius?", "Pompeï"],
-    ["Welke vrouw was bondskanselier van Duitsland van 2005 tot 2021?", "Angela Merkel"],
-    ["In welke West-Vlaamse stad staat de Menenpoort?", "Ieper"],
-    ["Welke Franse heldin stierf in 1431 op de brandstapel?", "Jeanne d'Arc"],
-    ["Welk gebouw in Washington werd bestormd op 6 januari 2021?", "Het Capitool"],
-    ["Welke uitvinding liet Alexander Graham Bell in 1876 patenteren?", "De telefoon"],
-    ["In welk jaar waren er aanslagen in de luchthaven van Zaventem en metrostation Maalbeek?", "2016"],
-    ["Welke Britse premier kreeg de bijnaam 'Iron Lady'?", "Margaret Thatcher"],
-    ["In welke kerncentrale in Oekraïne gebeurde in 1986 een zware ramp?", "Tsjernobyl"],
-    ["Welke koning der Belgen trad af in 2013?", "Albert II"],
-    ["Op welke twee Japanse steden viel in 1945 een atoombom?", "Hiroshima en Nagasaki"],
-    ["Welke Belgische koning maakte van Congo zijn privébezit?", "Leopold II"],
-    ["Welke uitvinding van Gutenberg veranderde rond 1450 de wereld?", "De boekdrukkunst"],
-    ["Welke Engelse koning had zes vrouwen?", "Hendrik VIII"],
-    ["Naar welk beroemd scheepswrak dook de duikboot Titan toen ze in 2023 implodeerde?", "De Titanic"],
-    ["Wie werd in 2024 premier van het Verenigd Koninkrijk?", "Keir Starmer"],
-    ["In welk jaar zette de eerste mens voet op de maan?", "1969"],
-    ["Welke Belgische oud-premier werd eind 2019 voorzitter van de Europese Raad?", "Charles Michel"],
-    ["Wie was de eerste koning der Belgen?", "Leopold I"],
-    ["Welke veldslag uit 1302 herdenkt Vlaanderen elk jaar op 11 juli?", "De Guldensporenslag"],
-    ["In welke stad werd aartshertog Frans Ferdinand in 1914 doodgeschoten?", "Sarajevo"],
-    ["Welke Sovjetleider voerde glasnost en perestrojka in?", "Michail Gorbatsjov"],
-    ["Welke Amerikaanse president werd in 1963 vermoord in Dallas?", "John F. Kennedy"],
-    ["In welk jaar viel de Sovjet-Unie uit elkaar?", "1991"],
-    ["Van welke farao ontdekte Howard Carter in 1922 het graf?", "Toetanchamon"],
-    ["Welke Frankische vorst werd in het jaar 800 tot keizer gekroond?", "Karel de Grote"],
-    ["Welke Belgische koning verongelukte in 1934 bij een rotsbeklimming in Marche-les-Dames?", "Albert I"],
-    ["Hoe heet de crisis rond de terugkeer van koning Leopold III na de Tweede Wereldoorlog?", "De Koningskwestie"],
-    ["In welk jaar werd Congo onafhankelijk van België?", "1960"],
-    ["Welk schandaal dwong president Nixon in 1974 tot aftreden?", "Watergate"],
-    ["Welke Duitse monnik maakte in 1517 zijn 95 stellingen bekend?", "Maarten Luther"],
-    ["Welke revolutie begon in 1789 met de bestorming van de Bastille?", "De Franse Revolutie"],
-    ["Welke Romeinse keizer zou muziek gespeeld hebben terwijl Rome brandde?", "Nero"],
-    ["Welke ziekte doodde in de 14de eeuw ongeveer een derde van de Europeanen?", "De pest (de Zwarte Dood)"],
-    ["Onder welke naam kennen we de geallieerde landing in Normandië op 6 juni 1944?", "D-Day (operatie Overlord)"],
-    ["Welke Britse premier leidde zijn land door de Tweede Wereldoorlog?", "Winston Churchill"],
-    ["Welke revolutionair kwam in 1959 aan de macht in Cuba?", "Fidel Castro"],
-    ["Welke Belgische stad organiseerde de Olympische Spelen van 1920?", "Antwerpen"],
-    ["Welk verdrag uit 1992 legde de basis voor de Europese Unie en de euro?", "Het Verdrag van Maastricht"],
-    ["Wie was premier van België van oktober 2020 tot begin 2025?", "Alexander De Croo"],
-    ["Wie werd in 2019 de eerste vrouwelijke premier van België?", "Sophie Wilmès"],
-    ["Welke Duitse politica is sinds 2019 voorzitter van de Europese Commissie?", "Ursula von der Leyen"],
-    ["Welke Syrische president werd in december 2024 verdreven?", "Bashar al-Assad"],
-    ["Welke Japanse oud-premier werd in 2022 doodgeschoten tijdens een toespraak?", "Shinzo Abe"],
-    ["Welke Russische oppositieleider stierf in februari 2024 in een strafkamp?", "Aleksej Navalny"],
-    ["Welke baas van het Wagner-huurlingenleger stierf in 2023 bij een vliegtuigcrash, kort na zijn muiterij?", "Jevgeni Prigozjin"],
-    ["Welke Franse koningin werd in 1793 onthoofd?", "Marie-Antoinette"],
-    ["Welke beschaving bouwde de piramide van Chichén Itzá in Mexico?", "De Maya's"],
-    ["Welke Portugese zeevaarder leidde de eerste reis rond de wereld maar sneuvelde onderweg?", "Ferdinand Magellaan"],
-    ["In welk jaar werd Nelson Mandela president van Zuid-Afrika?", "1994"],
-    ["Welke stad was de hoofdstad van West-Duitsland?", "Bonn"],
-    ["Van welke Belgische stad ging in augustus 1914 de universiteitsbibliotheek in vlammen op?", "Leuven"],
-    ["Wie volgde in 2025 Olaf Scholz op als Duits bondskanselier?", "Friedrich Merz"],
-    ["Welk land werd in 2024 het 32ste lid van de NAVO?", "Zweden"]
-  ],
-  paars: [
-    ["Welke Belgische schilder zette onder een pijp de woorden 'Ceci n'est pas une pipe'?", "René Magritte"],
-    ["Welke anonieme straatkunstenaar liet in 2018 een werk versnipperen tijdens een veiling?", "Banksy"],
-    ["Welke Vlaamse barokschilder woonde en werkte in Antwerpen en schilderde 'De Kruisafneming'?", "Peter Paul Rubens"],
-    ["Welk beroemd altaarstuk van de gebroeders Van Eyck hangt in de Sint-Baafskathedraal in Gent?", "Het Lam Gods"],
-    ["Welke Belgische detective met snor bedacht Agatha Christie?", "Hercule Poirot"],
-    ["Welke kunstenaar beschilderde het plafond van de Sixtijnse Kapel?", "Michelangelo"],
-    ["Uit welk boek van George Orwell komt 'Big Brother'?", "1984"],
-    ["Wie schilderde 'Meisje met de parel'?", "Johannes Vermeer"],
-    ["Wie schilderde 'De Nachtwacht'?", "Rembrandt"],
-    ["Welke popartkunstenaar maakte zeefdrukken van soepblikken en Marilyn Monroe?", "Andy Warhol"],
-    ["Welke Noorse schilder maakte 'De Schreeuw'?", "Edvard Munch"],
-    ["Welke schrijfster van 'It Ends with Us' werd razend populair dankzij BookTok?", "Colleen Hoover"],
-    ["Welke architect ontwierp de Sagrada Família?", "Antoni Gaudí"],
-    ["Welke Vlaamse schrijver schreef 'Het verdriet van België'?", "Hugo Claus"],
-    ["Welk stuk fruit plakte kunstenaar Maurizio Cattelan met ducttape aan de muur?", "Een banaan"],
-    ["Welke componist schreef zijn Negende Symfonie toen hij al doof was?", "Ludwig van Beethoven"],
-    ["Welke Deense schrijver schreef 'De kleine zeemeermin'?", "Hans Christian Andersen"],
-    ["Uit welke Belgische stad komen modeontwerpers als Dries Van Noten en Ann Demeulemeester?", "Antwerpen"],
-    ["Welke Vlaamse tekenaar bedacht Jommeke?", "Jef Nys"],
-    ["In welke Spaanse stad staat het Guggenheim-museum van architect Frank Gehry?", "Bilbao"],
-    ["Wie schreef 'De kleine prins'?", "Antoine de Saint-Exupéry"],
-    ["Welke Spaanse schilder is bekend om zijn smeltende klokken?", "Salvador Dalí"],
-    ["In welke Italiaanse stad staat het beeld van David door Michelangelo?", "Florence"],
-    ["In welke stripreeks van Merho spelen Marcel, Charlotte, Fanny en Konstantinopel mee?", "De Kiekeboes"],
-    ["Voor welke bouwstijl van rond 1900 is de Brusselse architect Victor Horta bekend?", "Art nouveau"],
-    ["Welke schrijver bedacht de boeken waarop 'Game of Thrones' gebaseerd is?", "George R.R. Martin"],
-    ["Welke Spaanse kunstenaar schilderde 'Guernica'?", "Pablo Picasso"],
-    ["Welke Vlaamse schilder maakte 'De Toren van Babel' en 'De Boerenbruiloft'?", "Pieter Bruegel de Oude"],
-    ["Welke schilder uit 's-Hertogenbosch maakte 'De Tuin der Lusten'?", "Jheronimus Bosch"],
-    ["Welke Oostenrijkse schilder maakte 'De Kus', vol bladgoud?", "Gustav Klimt"],
-    ["Wie schreef 'Oorlog en vrede'?", "Leo Tolstoj"],
-    ["Welke Russische schrijver schreef 'Misdaad en straf'?", "Fjodor Dostojevski"],
-    ["Welke Colombiaanse schrijver schreef 'Honderd jaar eenzaamheid'?", "Gabriel García Márquez"],
-    ["Wie schreef 'De helaasheid der dingen'?", "Dimitri Verhulst"],
-    ["Welke Vlaamse schrijver schreef 'Oorlog en terpentijn'?", "Stefan Hertmans"],
-    ["Welke Vlaamse schrijfster debuteerde in 2016 met de bestseller 'Het smelt'?", "Lize Spit"],
-    ["Welke Franse schrijfster kreeg in 2022 de Nobelprijs voor Literatuur?", "Annie Ernaux"],
-    ["Welke Zuid-Koreaanse schrijfster van 'De vegetariër' kreeg in 2024 de Nobelprijs voor Literatuur?", "Han Kang"],
-    ["Wie schreef 'Pride and Prejudice'?", "Jane Austen"],
-    ["Wie schreef 'Het parfum', over een moordenaar met een uitzonderlijke neus?", "Patrick Süskind"],
-    ["Welke Italiaan schreef 'De naam van de roos'?", "Umberto Eco"],
-    ["Welke Spaanse schrijver bedacht Don Quichot?", "Miguel de Cervantes"],
-    ["Aan welke Griekse dichter worden de 'Ilias' en de 'Odyssee' toegeschreven?", "Homerus"],
-    ["Wie componeerde 'De vier jaargetijden'?", "Antonio Vivaldi"],
-    ["Wie componeerde de opera 'Die Zauberflöte'?", "Wolfgang Amadeus Mozart"],
-    ["Welke Belg uit Dinant vond de saxofoon uit?", "Adolphe Sax"],
-    ["In welk museum in Madrid hangt 'Las Meninas' van Velázquez?", "Het Prado"],
-    ["In welk Londens museum ligt de Steen van Rosetta?", "Het British Museum"],
-    ["Welke Nederlandse schilder werkte met zwarte lijnen en rode, gele en blauwe vlakken?", "Piet Mondriaan"],
-    ["Welke Mexicaanse schilderes is bekend om haar zelfportretten met doorlopende wenkbrauwen?", "Frida Kahlo"],
-    ["Welke Belgische kunstenaar bekleedde een plafond in het Koninklijk Paleis met keverschildjes?", "Jan Fabre"],
-    ["Welke schilder uit Oostende is bekend om zijn maskers en skeletten?", "James Ensor"],
-    ["Onder welke naam kennen we Georges Remi, de tekenaar van Kuifje?", "Hergé"],
-    ["Wie bedacht Suske en Wiske?", "Willy Vandersteen"],
-    ["Welke Vlaamse tekenaar bedacht Nero?", "Marc Sleen"],
-    ["Welke Franse beeldhouwer maakte 'De Denker'?", "Auguste Rodin"],
-    ["Welke architect ontwierp de glazen piramide van het Louvre?", "I.M. Pei"],
-    ["Bij welke kunststroming horen Monet, Renoir en Degas?", "Het impressionisme"],
-    ["Welke Japanse kunstenares is bekend om haar stippen en pompoenen?", "Yayoi Kusama"],
-    ["Wie schreef de toekomstroman 'Brave New World'?", "Aldous Huxley"],
-    ["Welke schrijver liet Gregor Samsa wakker worden als een reusachtig insect?", "Franz Kafka"],
-    ["Welke Ierse schrijfster schreef 'Normal People'?", "Sally Rooney"],
-    ["In welk ballet van Tsjaikovski wordt prinses Odette betoverd?", "Het Zwanenmeer"],
-    ["Welke Belgische choreografe richtte het dansgezelschap Rosas op?", "Anne Teresa De Keersmaeker"],
-    ["Welke priester-dichter uit Brugge schreef 'Het Schrijverke'?", "Guido Gezelle"]
-  ],
-  groen: [
-    ["Welke planeet staat het dichtst bij de zon?", "Mercurius"],
-    ["Welke ruimtetelescoop werd eind 2021 gelanceerd als opvolger van Hubble?", "De James Webb-telescoop"],
-    ["Welk vogeltje kan achteruit vliegen?", "De kolibrie"],
-    ["Hoe heet het proces waarbij planten zonlicht omzetten in energie?", "Fotosynthese"],
-    ["Hoe heet de reusachtige raket van SpaceX, de grootste ooit gebouwd?", "Starship"],
-    ["Welk metaal is vloeibaar bij kamertemperatuur?", "Kwik"],
-    ["Hoeveel harten heeft een octopus?", "Drie"],
-    ["Welke vitamine maakt je lichaam aan dankzij zonlicht?", "Vitamine D"],
-    ["Wat is de wetenschappelijke naam van de moderne mens?", "Homo sapiens"],
-    ["Hoeveel tanden heeft een volwassen mens, verstandskiezen inbegrepen?", "32"],
-    ["Hoe heet het NASA-programma dat opnieuw mensen naar de maan stuurt?", "Artemis"],
-    ["In welke eenheid meten we elektrische spanning?", "Volt"],
-    ["Welke digitale munt werd in 2009 bedacht door de mysterieuze Satoshi Nakamoto?", "Bitcoin"],
-    ["Wie was in 1992 de eerste Belg in de ruimte?", "Dirk Frimout"],
-    ["Welk hormoon regelt je bloedsuiker en moeten veel diabetespatiënten inspuiten?", "Insuline"],
-    ["Ongeveer hoeveel procent van het aardoppervlak is bedekt met water?", "Ongeveer 70 procent"],
-    ["Welk edelmetaal heeft als symbool Au?", "Goud"],
-    ["Welk diabetesmedicijn werd wereldwijd een hype als afslankprik?", "Ozempic"],
-    ["Ongeveer hoeveel minuten heeft zonlicht nodig om de aarde te bereiken?", "Ongeveer 8 minuten"],
-    ["Wat is het grootste orgaan van het menselijk lichaam?", "De huid"],
-    ["Welke app voor korte filmpjes is van het Chinese bedrijf ByteDance?", "TikTok"],
-    ["Welk chemisch element heeft als symbool Fe?", "IJzer"],
-    ["Welk gas maakt ongeveer 78 procent van de lucht uit?", "Stikstof"],
-    ["Hoeveel botten heeft een volwassen mens?", "206"],
-    ["Welke planeet heeft de meeste bekende manen?", "Saturnus"],
-    ["Welk hemellichaam was tot 2006 officieel de negende planeet?", "Pluto"],
-    ["Welke ster staat, na de zon, het dichtst bij de aarde?", "Proxima Centauri"],
-    ["Hoe heet het sterrenstelsel waarin de aarde ligt?", "De Melkweg"],
-    ["Hoe snel gaat licht, afgerond in kilometer per seconde?", "300.000 kilometer per seconde"],
-    ["Welke wetenschapster kreeg twee Nobelprijzen voor haar onderzoek naar radioactiviteit?", "Marie Curie"],
-    ["Wie ontdekte in 1928 de penicilline?", "Alexander Fleming"],
-    ["Welke bioloog schreef 'Over het ontstaan van soorten'?", "Charles Darwin"],
-    ["Welke Belgische priester en sterrenkundige bedacht de oerknaltheorie?", "Georges Lemaître"],
-    ["Welke Belg kreeg in 2013 samen met Peter Higgs de Nobelprijs voor Natuurkunde?", "François Englert"],
-    ["In welk lichaamsdeel zit de stijgbeugel, het kleinste botje van de mens?", "In het oor"],
-    ["Welk orgaan maakt gal aan?", "De lever"],
-    ["Hoeveel holtes heeft het menselijk hart?", "Vier"],
-    ["Welke bloedcellen vervoeren zuurstof door het lichaam?", "De rode bloedcellen"],
-    ["Welk Australisch zoogdier legt eieren en heeft een snavel?", "Het vogelbekdier"],
-    ["Welke naaldboom verliest in de herfst zijn naalden?", "De lork (lariks)"],
-    ["Welke roofvogel is in duikvlucht het snelste dier ter wereld?", "De slechtvalk"],
-    ["Welk landdier is het langst drachtig, bijna twee jaar?", "De olifant"],
-    ["Welke pH-waarde heeft zuiver water?", "7"],
-    ["Wat meet je met de schaal van Richter?", "De kracht van aardbevingen"],
-    ["Welke laag in de atmosfeer beschermt ons tegen uv-straling?", "De ozonlaag"],
-    ["Welk Duits bedrijf ontwikkelde samen met Pfizer een van de eerste coronavaccins?", "BioNTech"],
-    ["Welke vaccintechniek, bekend van corona, leverde in 2023 een Nobelprijs op?", "mRNA"],
-    ["Welke chipmaker van topman Jensen Huang werd dankzij AI het waardevolste bedrijf ter wereld?", "Nvidia"],
-    ["Welk bedrijf maakt de AI-assistent Claude?", "Anthropic"],
-    ["Welk Chinees AI-model deed begin 2025 de techaandelen kelderen?", "DeepSeek"],
-    ["Welk Leuvens onderzoekscentrum behoort tot de wereldtop in chiptechnologie?", "imec"],
-    ["In welke eenheid meten we elektrische weerstand?", "Ohm"],
-    ["Wat is het meest voorkomende element in het heelal?", "Waterstof"],
-    ["Welk edelgas gaf zijn naam aan felgekleurde lichtreclames?", "Neon"],
-    ["Bij hoeveel graden Celsius ligt het absolute nulpunt, afgerond?", "Min 273 graden"],
-    ["Welke ruimtesonde uit 1977 is het verst van de aarde verwijderd?", "Voyager 1"],
-    ["Hoe heet de marsrover die in 2021 landde met het helikoptertje Ingenuity?", "Perseverance"],
-    ["Een tekort aan welke vitamine veroorzaakt scheurbuik?", "Vitamine C"],
-    ["Wat is de grootste vis ter wereld?", "De walvishaai"],
-    ["Welke Belgische astronaut was in 2009 commandant van het internationaal ruimtestation ISS?", "Frank De Winne"],
-    ["Welke Belg werd in 2022 door ESA geselecteerd als astronaut?", "Raphaël Liégeois"]
-  ],
-  oranje: [
-    ["Welke Belgische wielrenner won in 2024 olympisch goud in de wegrit én de tijdrit?", "Remco Evenepoel"],
-    ["Welke Nederlandse coureur werd van 2021 tot 2024 vier keer op rij wereldkampioen Formule 1?", "Max Verstappen"],
-    ["In welke atletiekdiscipline won Nafi Thiam drie keer olympisch goud?", "De zevenkamp"],
-    ["Welke Sloveen won de Tour de France in 2020, 2021, 2024 en 2025?", "Tadej Pogačar"],
-    ["Welke Serviër won 24 grandslamtitels, een record bij de mannen?", "Novak Djokovic"],
-    ["Hoeveel punten is de roos in het midden van een dartsbord waard?", "50"],
-    ["Welke Rode Duivel verliet Manchester City in 2025 voor Napoli?", "Kevin De Bruyne"],
-    ["Welke Limburgse tennisster won vier grandslamtitels en werd als mama opnieuw nummer één?", "Kim Clijsters"],
-    ["Welke Argentijn won acht keer de Gouden Bal?", "Lionel Messi"],
-    ["Hoe heet de Belgische hockeyploeg die olympisch goud won in Tokio?", "De Red Lions"],
-    ["Welke Nederlandse wielrenner is de kleinzoon van Raymond Poulidor?", "Mathieu van der Poel"],
-    ["Welke Belgische wielrenner uit Herentals won in 2022 de groene trui in de Tour de France?", "Wout van Aert"],
-    ["Welke Amerikaanse zwemmer won 23 keer olympisch goud?", "Michael Phelps"],
-    ["Welke Belgische eersteklasser speelt net als Cercle in het Jan Breydelstadion?", "Club Brugge"],
-    ["Welke Franse spits verhuisde in 2024 van Paris Saint-Germain naar Real Madrid?", "Kylian Mbappé"],
-    ["Welke Japanse vechtsport betekent letterlijk 'zachte weg'?", "Judo"],
-    ["Welke stad organiseert de Olympische Zomerspelen van 2028?", "Los Angeles"],
-    ["In welk land vonden de Olympische Winterspelen van 2026 plaats?", "Italië (Milaan en Cortina)"],
-    ["In welk bordspel ruil je hout, graan en erts om dorpen en steden te bouwen?", "Catan"],
-    ["Welke Spanjaard won veertien keer Roland Garros?", "Rafael Nadal"],
-    ["Welke Engelse tiener werd begin 2025 op zijn zeventiende wereldkampioen darts?", "Luke Littler"],
-    ["Welke Belgische doelman won in 2022 de Champions League met Real Madrid?", "Thibaut Courtois"],
-    ["Welke Franse club won in 2025 voor het eerst de Champions League?", "Paris Saint-Germain"],
-    ["Welke drie landen organiseerden samen het WK voetbal van 2026?", "De Verenigde Staten, Canada en Mexico"],
-    ["Voor welk Italiaans Formule 1-team rijdt Lewis Hamilton sinds 2025?", "Ferrari"],
-    ["Welke Britse McLaren-coureur werd in 2025 wereldkampioen Formule 1?", "Lando Norris"],
-    ["Hoeveel velden telt een schaakbord?", "64"],
-    ["Hoe lang is een marathon precies?", "42,195 kilometer"],
-    ["Welke Belg won vijf keer de Tour de France?", "Eddy Merckx"],
-    ["Welke Belgische tennisster won zeven grandslamtitels, waarvan vier op Roland Garros?", "Justine Henin"],
-    ["Welk land won het WK voetbal van 2018, waar België derde werd?", "Frankrijk"],
-    ["Welke Spaanse bondscoach leidde de Rode Duivels naar brons op het WK van 2018?", "Roberto Martínez"],
-    ["Wie is de topschutter aller tijden van de Rode Duivels?", "Romelu Lukaku"],
-    ["Welke Brusselse club werd in 2025 voor het eerst in negentig jaar Belgisch kampioen?", "Union Saint-Gilloise"],
-    ["Welke Belgische club won in 1988 de Europacup II?", "KV Mechelen"],
-    ["Op welk circuit in de Ardennen wordt de Grote Prijs van België gereden?", "Spa-Francorchamps"],
-    ["Welke Zweedse polsstokspringer verbetert keer op keer zijn eigen wereldrecord?", "Armand Duplantis"],
-    ["Welke Belgische hoogspringster won olympisch goud in Peking in 2008?", "Tia Hellebaut"],
-    ["Welke Belgische turnster won in Tokio olympisch goud aan de brug met ongelijke leggers?", "Nina Derwael"],
-    ["Welke Belgische wielrenster werd in 2023 en 2024 wereldkampioene op de weg?", "Lotte Kopecky"],
-    ["Welke Deen won de Tour de France in 2022 en 2023?", "Jonas Vingegaard"],
-    ["Welke kasseiklassieker eindigt op een wielerpiste in Noord-Frankrijk?", "Parijs-Roubaix"],
-    ["Welke Belg won, net als Roger De Vlaeminck, vier keer Parijs-Roubaix?", "Tom Boonen"],
-    ["Hoeveel spelers heeft een rugbyploeg op het veld bij rugby union?", "Vijftien"],
-    ["Hoeveel punten levert een touchdown op in American football?", "Zes"],
-    ["Welke Franse basketter van 2,24 meter speelt in de NBA bij de San Antonio Spurs?", "Victor Wembanyama"],
-    ["Welke Italiaan werd in 2024 de nummer één van het mannentennis?", "Jannik Sinner"],
-    ["Welke Spanjaard won Wimbledon in 2023 en 2024?", "Carlos Alcaraz"],
-    ["Welke Noor was wereldkampioen schaken van 2013 tot 2023?", "Magnus Carlsen"],
-    ["Welke Indiase tiener werd eind 2024 de jongste wereldkampioen schaken ooit?", "Gukesh Dommaraju"],
-    ["Hoeveel punten is de zwarte bal waard bij snooker?", "Zeven"],
-    ["Welke Belg werd in 2023 wereldkampioen snooker?", "Luca Brecel"],
-    ["Op welke hoogte hangt een basketbalring?", "3,05 meter"],
-    ["In welk land werd padel uitgevonden?", "Mexico"],
-    ["Welke Australische stad organiseert de Olympische Zomerspelen van 2032?", "Brisbane"],
-    ["Welke Spaanse middenvelder won de Gouden Bal in 2024?", "Rodri"],
-    ["Welke Franse aanvaller won de Gouden Bal in 2025?", "Ousmane Dembélé"],
-    ["Welk land won het EK voetbal dat in de zomer van 2021 werd gespeeld?", "Italië"],
-    ["In welk bordspel zoek je de moordenaar onder verdachten als kolonel Mosterd?", "Cluedo"],
-    ["Hoeveel vakjes telt een Monopolybord?", "40"],
-    ["Welke Belgische motorcrosser werd tien keer wereldkampioen?", "Stefan Everts"],
-    ["In welke sport spreek je van een birdie, een eagle en een bogey?", "Golf"],
-    ["Welke Keniaan liep in 2019 als eerste een marathon in minder dan twee uur?", "Eliud Kipchoge"],
-    ["Welke Belgische marathonloper won olympisch brons in Tokio en zilver in Parijs?", "Bashir Abdi"]
-  ]
+  blauw: {
+    makkelijk: [
+      ["In welke stad staat het hoogste gebouw ter wereld, de Burj Khalifa?","Dubai"],
+      ["Welke rivier stroomt door Parijs?","De Seine"],
+      ["Wat is de hoogste berg ter wereld?","De Mount Everest"],
+      ["In welke Belgische stad staat het Atomium?","Brussel"],
+      ["Welk Europees land heeft de vorm van een laars?","Italië"],
+      ["Wat is de grootste oceaan ter wereld?","De Stille Oceaan"],
+      ["Wat is de hoofdstad van Oostenrijk?","Wenen"],
+      ["Hoe heet de zee-engte tussen Engeland en Frankrijk, waar een treintunnel onderdoor loopt?","Het Kanaal"],
+      ["Welk land is qua oppervlakte het grootste ter wereld?","Rusland"],
+      ["In welke stad staat de Sagrada Família?","Barcelona"],
+      ["Welke rivier stroomt door Antwerpen?","De Schelde"],
+      ["In welk land ligt de stad Marrakech?","Marokko"],
+      ["Wat is de grootste zandwoestijn ter wereld?","De Sahara"],
+      ["Bij welk land hoort het vakantie-eiland Bali?","Indonesië"],
+      ["Wat is de hoofdstad van Japan?","Tokio"],
+      ["Welke twee grote landen liggen op het Iberisch Schiereiland?","Spanje en Portugal"],
+      ["Hoeveel provincies telt België?","Tien"],
+      ["Welke stad wordt 'The Big Apple' genoemd?","New York"],
+      ["Wat is het kleinste land ter wereld?","Vaticaanstad"],
+      ["Welke zee ligt tussen Europa en Afrika?","De Middellandse Zee"],
+      ["Wat is de hoofdstad van Nederland?","Amsterdam"],
+      ["In welke Amerikaanse staat ligt Los Angeles?","Californië"],
+      ["Van welk Scandinavisch land is Oslo de hoofdstad?","Noorwegen"],
+      ["Wat is het grootste land van Zuid-Amerika?","Brazilië"],
+      ["Van welk land is Reykjavik de hoofdstad?","IJsland"],
+      ["Op welk continent ligt Egypte?","Afrika"],
+      ["Welke Italiaanse stad staat bekend om haar kanalen en gondels?","Venetië"],
+      ["Welk gebergte vormt de grens tussen Frankrijk en Spanje?","De Pyreneeën"],
+      ["Welke taal spreken ze in Brazilië?","Portugees"],
+      ["In welke stad staat de Brandenburger Tor?","Berlijn"],
+      ["Welke Amerikaanse staat bestaat volledig uit eilanden in de Stille Oceaan?","Hawaï"],
+      ["Aan welke zee ligt de Belgische kust?","De Noordzee"],
+      ["Welk land heeft een rood esdoornblad in zijn vlag?","Canada"],
+      ["Welke Turkse stad heette vroeger Constantinopel?","Istanbul"],
+      ["Wat is het grootste eiland ter wereld?","Groenland"]
+    ],
+    gemiddeld: [
+      ["Wat is de hoofdstad van Australië?","Canberra"],
+      ["Welk land heeft sinds 2023 de meeste inwoners ter wereld?","India"],
+      ["In welk land vind je de Inca-stad Machu Picchu?","Peru"],
+      ["Wat is de hoofdstad van Canada?","Ottawa"],
+      ["Welk land wil sinds 2022 officieel 'Türkiye' genoemd worden?","Turkije"],
+      ["Hoe heet het hoogste punt van België?","Signaal van Botrange"],
+      ["Welk kanaal in Egypte raakte in 2021 geblokkeerd door het containerschip Ever Given?","Het Suezkanaal"],
+      ["Welk Noord-Europees land werd in 2023 het 31ste lid van de NAVO?","Finland"],
+      ["In welk land ligt de Kilimanjaro?","Tanzania"],
+      ["Welk land aan de Adriatische Zee stapte in 2023 over op de euro?","Kroatië"],
+      ["Welke Belgische kuststad wordt 'de Koningin der Badsteden' genoemd?","Oostende"],
+      ["Wat is de hoofdstad van Turkije?","Ankara"],
+      ["Hoe heet de beroemde rode rots in het midden van Australië?","Uluru (Ayers Rock)"],
+      ["Welke stad is de hoofdstad van Wallonië?","Namen"],
+      ["In welk land ligt Transsylvanië, de streek van graaf Dracula?","Roemenië"],
+      ["Bij welk koninkrijk hoort Groenland?","Denemarken"],
+      ["Welke golf wilde president Trump in 2025 omdopen tot 'Golf van Amerika'?","De Golf van Mexico"],
+      ["Wat is de hoofdstad van Nieuw-Zeeland?","Wellington"],
+      ["Wat is de langste rivier van Europa?","De Wolga"],
+      ["Welk Scandinavisch land telt de meeste eilanden ter wereld?","Zweden"],
+      ["Hoe heet de zeestraat die Istanbul in een Europees en een Aziatisch deel splitst?","De Bosporus"],
+      ["Wat is de hoofdstad van Marokko?","Rabat"],
+      ["In welk land ligt het tempelcomplex Angkor Wat?","Cambodja"],
+      ["Wat is de hoogste berg van de Alpen?","De Mont Blanc"],
+      ["Wat is de hoofdstad van Zwitserland?","Bern"],
+      ["Welk land heeft de langste kustlijn ter wereld?","Canada"],
+      ["Welke woestijn in het noorden van Chili geldt als de droogste ter wereld?","De Atacama"],
+      ["Welk Russisch meer is het diepste ter wereld?","Het Baikalmeer"],
+      ["Welke Belgische provincie is de grootste in oppervlakte?","Luxemburg"],
+      ["Welke Belgische provincie is de kleinste in oppervlakte?","Waals-Brabant"],
+      ["Wat is de hoofdstad van de provincie Vlaams-Brabant?","Leuven"],
+      ["Wat is de hoofdstad van Brazilië?","Brasília"],
+      ["Welk ministaatje ligt in de Pyreneeën tussen Frankrijk en Spanje?","Andorra"],
+      ["Welk zoutmeer tussen Israël en Jordanië is het laagste punt op aarde?","De Dode Zee"],
+      ["Hoe heet het land dat vroeger Birma werd genoemd?","Myanmar"],
+      ["Wat is de hoofdstad van Vietnam?","Hanoi"],
+      ["Welke rivier stroomt door Wenen, Boedapest en Belgrado?","De Donau"],
+      ["Welke eilandengroep van Ecuador werd beroemd door Charles Darwin?","De Galapagoseilanden"],
+      ["Welk Zuid-Amerikaans land heeft Sucre als hoofdstad en La Paz als regeringszetel?","Bolivia"],
+      ["Hoe heet de kaap op de zuidpunt van Zuid-Amerika?","Kaap Hoorn"],
+      ["Welke vulkaan op Sicilië is de hoogste actieve vulkaan van Europa?","De Etna"],
+      ["Wat is de grootste staat van de Verenigde Staten?","Alaska"],
+      ["Hoe heet de zee-engte tussen Spanje en Marokko?","De Straat van Gibraltar"],
+      ["Van welk land is Tallinn de hoofdstad?","Estland"],
+      ["Wat is de hoofdstad van Pakistan?","Islamabad"],
+      ["Welk Afrikaans land heeft de meeste inwoners?","Nigeria"],
+      ["Welke rivier sleet de Grand Canyon uit?","De Colorado"],
+      ["In welk land ligt de legendarische woestijnstad Timboektoe?","Mali"],
+      ["Welke republiek ligt, net als Vaticaanstad, volledig binnen Italië?","San Marino"],
+      ["Wat is de hoofdstad van Zuid-Korea?","Seoel"]
+    ],
+    moeilijk: [
+      ["Welke hoofdstad ligt recht tegenover Kinshasa, aan de andere oever van de Congostroom?","Brazzaville"],
+      ["Welk Afrikaans koninkrijk heette tot 2018 Swaziland?","Eswatini"],
+      ["Welke hoofdstad van Kazachstan heette enkele jaren Nur-Sultan?","Astana"],
+      ["Welke Deense eilandengroep ligt tussen Schotland en IJsland?","De Faeröer"],
+      ["Wat is de hoofdstad van Burkina Faso?","Ouagadougou"],
+      ["Wat is de hoofdstad van Mongolië?","Ulaanbaatar"],
+      ["Welk land heeft als enige ter wereld een vlag die niet rechthoekig is?","Nepal"],
+      ["Wat is de langste rivier van Azië?","De Jangtsekiang (Yangtze)"],
+      ["In welk land ligt de Ángelwaterval, de hoogste waterval ter wereld?","Venezuela"],
+      ["Welke stad is sinds 2006 de hoofdstad van Myanmar?","Naypyidaw"],
+      ["Welke zee in de Atlantische Oceaan heeft geen enkele kust?","De Sargassozee"],
+      ["Welke twee landen grenzen alleen aan landen die zelf ook geen zee hebben?","Liechtenstein en Oezbekistan"],
+      ["Wat is de hoogste berg van Zuid-Amerika?","De Aconcagua"],
+      ["Wat is de hoogste berg van Noord-Amerika?","De Denali (Mount McKinley)"],
+      ["Hoeveel buurlanden heeft Duitsland?","Negen"],
+      ["Wat is de noordelijkste hoofdstad van een onafhankelijk land?","Reykjavik"],
+      ["Welke rivier vormt een groot deel van de grens tussen de Verenigde Staten en Mexico?","De Rio Grande"],
+      ["Welke rivier ontspringt op het plateau van Langres, stroomt door Wallonië en mondt uit in Nederland?","De Maas"],
+      ["Welke Belgische gemeente bestaat uit een lappendeken van enclaves in Nederland?","Baarle-Hertog"],
+      ["Wat is het kleinste land op het Afrikaanse vasteland?","Gambia"],
+      ["Wat is de hoofdstad van Ethiopië?","Addis Abeba"],
+      ["Welke zeestraat scheidt Rusland van Alaska?","De Beringstraat"],
+      ["Op welk Frans eiland in de Indische Oceaan ligt de vulkaan Piton de la Fournaise?","Réunion"],
+      ["Wat is het grootste meer van Afrika?","Het Victoriameer"],
+      ["Welke woestijn bedekt grote delen van Mongolië en Noord-China?","De Gobi"],
+      ["Welke eilandstaat in de Stille Oceaan heeft Suva als hoofdstad?","Fiji"],
+      ["In welke Belgische provincie ligt het Signaal van Botrange?","Luik"],
+      ["Wat is de langste rivier van Frankrijk?","De Loire"],
+      ["Welke Europese hoofdstad ligt aan de monding van de Taag?","Lissabon"],
+      ["Wat is de hoofdstad van Slowakije?","Bratislava"],
+      ["Welk land tussen Roemenië en Oekraïne heeft Chisinau als hoofdstad?","Moldavië"],
+      ["Welk gebergte geldt als de grens tussen Europa en Azië?","De Oeral"],
+      ["Op welk eiland ligt het grootste deel van Kopenhagen?","Seeland"],
+      ["In welke rivier liggen de Victoriawatervallen?","De Zambezi"],
+      ["Welk koninkrijk in de Himalaya heeft Thimphu als hoofdstad?","Bhutan"],
+      ["Hoe heet de zeestraat tussen Australië en Tasmanië?","Straat Bass"],
+      ["Hoe heet de diepste trog van de oceanen, in de Stille Oceaan?","De Marianentrog"]
+    ]
+  },
+  roze: {
+    makkelijk: [
+      ["Welke film uit 2023 met Margot Robbie draait rond een wereldberoemde pop?","Barbie"],
+      ["Welke zangeres brak alle records met haar 'Eras Tour'?","Taylor Swift"],
+      ["In welke Zuid-Koreaanse Netflix-reeks spelen deelnemers dodelijke kinderspelletjes?","Squid Game"],
+      ["Welke Belgische zanger scoorde hits met 'Alors on danse' en 'Papaoutai'?","Stromae"],
+      ["In welke reeks strijden families om de IJzeren Troon?","Game of Thrones"],
+      ["Wie zong in 2023 de wereldhit 'Flowers'?","Miley Cyrus"],
+      ["Welke Vlaamse tv-quiz werd jarenlang gepresenteerd door Erik Van Looy?","De Slimste Mens ter Wereld"],
+      ["Uit welke Disneyfilm komt het lied 'Let It Go'?","Frozen"],
+      ["Hoe heet de tovenaarsschool van Harry Potter?","Zweinstein (Hogwarts)"],
+      ["Welke acteur speelt Iron Man in de Marvel-films?","Robert Downey Jr."],
+      ["Welke Netflix-reeks speelt zich af in het stadje Hawkins, met de Upside Down?","Stranger Things"],
+      ["Wie zingt 'Bad Guy' en 'What Was I Made For?'","Billie Eilish"],
+      ["In welk Vlaams tv-programma zoeken kandidaten uit wie de saboteur is?","De Mol"],
+      ["Welke film uit 1997 over een zinkend schip won elf Oscars?","Titanic"],
+      ["In welke Spaanse reeks dragen overvallers rode overalls en Dalí-maskers?","La Casa de Papel"],
+      ["Welke gele spons woont in een ananas op de bodem van de zee?","SpongeBob SquarePants"],
+      ["Welke Britse zanger zingt 'Shape of You' en 'Perfect'?","Ed Sheeran"],
+      ["Hoe heet het vervolg op 'Avatar' dat eind 2022 in de zalen kwam?","Avatar: The Way of Water"],
+      ["In welke Zuid-Koreaanse boyband zitten Jungkook, V en Jimin?","BTS"],
+      ["Welke acteur speelt kapitein Jack Sparrow in 'Pirates of the Caribbean'?","Johnny Depp"],
+      ["Welke streamingdienst heeft een rode N als logo?","Netflix"],
+      ["Welke gele tekenfilmfamilie woont in Springfield?","The Simpsons"],
+      ["Welke Marvel-film uit 2019 sloot het verhaal rond Thanos af?","Avengers: Endgame"],
+      ["In welke K-popgroep zitten Jennie, Lisa, Rosé en Jisoo?","Blackpink"],
+      ["Welke geheim agent draagt het nummer 007?","James Bond"],
+      ["Welk wereldberoemd dancefestival vindt elke zomer plaats in Boom?","Tomorrowland"],
+      ["In welke musicalfilm spelen Ryan Gosling en Emma Stone een jazzpianist en een actrice?","La La Land"],
+      ["In welke sitcom drinken zes vrienden koffie in Central Perk?","Friends"],
+      ["Welke loodgieter uit een videogame kreeg in 2023 een eigen animatiefilm?","Mario"],
+      ["Wie zong in 2022 de hit 'As It Was'?","Harry Styles"],
+      ["Welke Britse band rond Chris Martin maakte 'Viva la Vida'?","Coldplay"],
+      ["Welke Netflix-reeks vertelt het verhaal van de Britse koninklijke familie?","The Crown"],
+      ["Welke kabouter met een puntmuts is een creatie van Studio 100?","Kabouter Plop"],
+      ["Welke Pixar-film uit 2024 speelt zich af in het hoofd van tiener Riley?","Inside Out 2"],
+      ["In welke reeks wordt scheikundeleraar Walter White een drugsbaron?","Breaking Bad"],
+      ["Welke rapper heet in het echt Marshall Mathers?","Eminem"]
+    ],
+    gemiddeld: [
+      ["Wie speelt Wednesday Addams in de Netflix-reeks 'Wednesday'?","Jenna Ortega"],
+      ["Welke film over de vader van de atoombom won in 2024 de Oscar voor beste film?","Oppenheimer"],
+      ["Welk land won het Eurovisiesongfestival 2024 met Nemo?","Zwitserland"],
+      ["Welke Italiaanse rockband won het Eurovisiesongfestival 2021?","Måneskin"],
+      ["Welke zangeres trad zwanger op tijdens de halftime show van de Super Bowl in 2023?","Rihanna"],
+      ["Welke Brusselse zangeres scoorde met 'Balance ton quoi' en 'Tout oublier'?","Angèle"],
+      ["Wie zong de zomerhit 'Espresso' in 2024?","Sabrina Carpenter"],
+      ["In welke reeks speelt Pedro Pascal de smokkelaar Joel, die Ellie moet beschermen?","The Last of Us"],
+      ["Welke acteur speelde James Bond voor het laatst in 'No Time to Die'?","Daniel Craig"],
+      ["Welke Vlaamse band maakte het nummer 'Mia'?","Gorki"],
+      ["Welke zangeres bracht in 2024 het countryalbum 'Cowboy Carter' uit?","Beyoncé"],
+      ["Welke Zuid-Koreaanse film won in 2020 de Oscar voor beste film?","Parasite"],
+      ["Welke zanger van 'Blinding Lights' heet in het echt Abel Tesfaye?","The Weeknd"],
+      ["Welk land won het Eurovisiesongfestival 2025?","Oostenrijk"],
+      ["Welke musicalfilm uit 2024 met Ariana Grande vertelt over de heksen van Oz?","Wicked"],
+      ["Welke animatiefilm op Netflix over een meidengroep die op demonen jaagt, werd een hit in 2025?","KPop Demon Hunters"],
+      ["Welke Britse Netflix-reeks uit 2025 gaat over een jongen van 13 die verdacht wordt van moord?","Adolescence"],
+      ["Uit welke Disneyfilm komt het lied 'We Don't Talk About Bruno'?","Encanto"],
+      ["Wie regisseerde 'Inception', 'Interstellar' en 'Dunkirk'?","Christopher Nolan"],
+      ["Welke acteur kreeg postuum een Oscar voor zijn rol als de Joker in 'The Dark Knight'?","Heath Ledger"],
+      ["Welke HBO-reeks volgt de steenrijke mediafamilie Roy?","Succession"],
+      ["In welke reeks neemt chef-kok Carmy de broodjeszaak van zijn broer in Chicago over?","The Bear"],
+      ["Welke film van Lukas Dhont over twee boezemvrienden kreeg in 2023 een Oscarnominatie?","Close"],
+      ["Welke Vlaamse acteur brak door met de hoofdrol in 'Rundskop'?","Matthias Schoenaerts"],
+      ["Welke zanger van Queen overleed in 1991?","Freddie Mercury"],
+      ["Welke band bracht in 1973 het album 'The Dark Side of the Moon' uit?","Pink Floyd"],
+      ["Welke film met Michelle Yeoh won in 2023 zeven Oscars?","Everything Everywhere All at Once"],
+      ["Welke film over een stripdanseres uit Brooklyn won in 2025 de Oscar voor beste film?","Anora"],
+      ["Wie won in 1986 als enige Belg ooit het Eurovisiesongfestival?","Sandra Kim"],
+      ["Welke Antwerpse rockband rond Tom Barman maakte 'Instant Street'?","dEUS"],
+      ["Welke twee Belgische broers stonden als dj-duo op nummer één in de DJ Mag Top 100?","Dimitri Vegas & Like Mike"],
+      ["Welke Britse zangeres bracht de albums '19', '21', '25' en '30' uit?","Adele"],
+      ["Welke Ierse acteur won in 2024 de Oscar voor beste acteur?","Cillian Murphy"],
+      ["Welke regisseur maakte 'Pulp Fiction' en 'Kill Bill'?","Quentin Tarantino"],
+      ["In welke film zegt Tom Hanks dat het leven is als een doos chocolaatjes?","Forrest Gump"],
+      ["Welke reeks volgt de bende van Tommy Shelby in Birmingham?","Peaky Blinders"],
+      ["In welke Vlaamse reeks infiltreert agent Bob Lemmens bij een Limburgse xtc-baron?","Undercover"],
+      ["Welke Vlaamse presentator trekt de wereld rond in 'Reizen Waes'?","Tom Waes"],
+      ["Welke Ierse band zingt 'With or Without You'?","U2"],
+      ["Welke zangeres heet in het echt Stefani Germanotta?","Lady Gaga"],
+      ["Welke Puerto Ricaanse artiest verzorgde de halftime show van de Super Bowl in 2026?","Bad Bunny"],
+      ["Welk Frans dj-duo met robothelmen stopte ermee in 2021?","Daft Punk"],
+      ["Welke Japanse studio maakte 'Spirited Away' en 'My Neighbor Totoro'?","Studio Ghibli"],
+      ["Welke acteur speelt Paul Atreides in de 'Dune'-films?","Timothée Chalamet"],
+      ["Welke Britse reeks speelt zich af op het landgoed van de familie Crawley?","Downton Abbey"],
+      ["Wie presenteert 'De Mol' sinds de terugkeer van het programma in 2016?","Gilles De Coster"],
+      ["Welke Zweedse groep won in 1974 het Eurovisiesongfestival met 'Waterloo'?","ABBA"],
+      ["Welke Zweedse zangeres won het Eurovisiesongfestival in 2012 én in 2023?","Loreen"],
+      ["Welke band richtte Dave Grohl op na het einde van Nirvana?","Foo Fighters"],
+      ["Welke Belgische chansonnier zong 'Ne me quitte pas'?","Jacques Brel"],
+      ["Welke componist schreef de muziek voor 'Star Wars', 'Jaws' en 'Indiana Jones'?","John Williams"],
+      ["In welke reeks wordt een Amerikaanse footballcoach trainer van een Engelse voetbalclub?","Ted Lasso"],
+      ["Wie speelt schaakwonder Beth Harmon in 'The Queen's Gambit'?","Anya Taylor-Joy"],
+      ["Welke rapper bracht in 2024 'Not Like Us' uit en stond in 2025 op de Super Bowl?","Kendrick Lamar"]
+    ],
+    moeilijk: [
+      ["Welke Belgische regisseur maakte 'The Broken Circle Breakdown'?","Felix van Groeningen"],
+      ["Welke Spaanse zangeres bracht in 2022 het album 'Motomami' uit?","Rosalía"],
+      ["Wie regisseerde de Oscarwinnaar 'Parasite'?","Bong Joon-ho"],
+      ["Welke Vlaamse thriller van Erik Van Looy uit 2008 draait rond vijf vrienden en één appartement?","Loft"],
+      ["Welke twee broers uit Luik wonnen twee keer de Gouden Palm in Cannes?","Jean-Pierre en Luc Dardenne"],
+      ["Voor welke film kregen de broers Dardenne in 1999 hun eerste Gouden Palm?","Rosetta"],
+      ["In welke Belgische cultfilm uit 1992 volgt een cameraploeg seriemoordenaar Ben, gespeeld door Benoît Poelvoorde?","C'est arrivé près de chez vous (Man Bites Dog)"],
+      ["Welke actrice won Oscars voor 'La La Land' en 'Poor Things'?","Emma Stone"],
+      ["Welke Griekse regisseur maakte 'Poor Things' en 'The Favourite'?","Yorgos Lanthimos"],
+      ["Welke film won in 2004 alle elf Oscars waarvoor hij genomineerd was?","The Lord of the Rings: The Return of the King"],
+      ["Wie componeerde de muziek van 'Dune', 'Inception' en 'The Lion King'?","Hans Zimmer"],
+      ["Welke Britse band bracht in 1997 het album 'OK Computer' uit?","Radiohead"],
+      ["Welke videoclip was in 1981 de allereerste op MTV?","'Video Killed the Radio Star' van The Buggles"],
+      ["Welke Belgische kloosterzuster scoorde in 1963 een wereldhit met 'Dominique'?","Sœur Sourire (de Zingende Non)"],
+      ["Welke Belgische groep had in 1989 een wereldhit met 'Pump Up the Jam'?","Technotronic"],
+      ["Welke Belg zong 'Ça plane pour moi'?","Plastic Bertrand"],
+      ["Onder welke naam draaien de broers Dewaele van Soulwax als dj's?","2manydjs"],
+      ["Welke in Brugge geboren zanger scoorde in 2011 een wereldhit met 'Somebody That I Used to Know'?","Gotye"],
+      ["Welke reeks is de voorloper van 'Breaking Bad', rond advocaat Jimmy McGill?","Better Call Saul"],
+      ["In welke reeks hebben de werknemers van het bedrijf Lumon een gescheiden werk- en privégeheugen?","Severance"],
+      ["In welke Vlaamse reeks begint een West-Vlaamse boerenfamilie wiet te kweken?","Eigen Kweek"],
+      ["Welke actrice speelde Carmen in 'F.C. De Kampioenen'?","Loes Van den Heuvel"],
+      ["Welke Belg werd in 2015 vierde op het Eurovisiesongfestival met 'Rhythm Inside'?","Loïc Nottet"],
+      ["Welke Belgische band trad in 2021 aan op het Eurovisiesongfestival met 'The Wrong Place'?","Hooverphonic"],
+      ["Welke Zweedse regisseur maakte 'Het zevende zegel'?","Ingmar Bergman"],
+      ["Wie regisseerde '2001: A Space Odyssey' en 'The Shining'?","Stanley Kubrick"],
+      ["Welke film van Alfred Hitchcock bevat de beroemde douchescène?","Psycho"],
+      ["Welke zangeres van The Cranberries overleed in 2018?","Dolores O'Riordan"],
+      ["Van welke Britse band was Ian Curtis de zanger?","Joy Division"],
+      ["Welke Canadese zanger schreef 'Hallelujah'?","Leonard Cohen"],
+      ["Welke film van Justine Triet won in 2023 de Gouden Palm?","Anatomie d'une chute"],
+      ["Welke acteur won in 2025 de Oscar voor beste acteur met 'The Brutalist'?","Adrien Brody"],
+      ["In welke Vlaamse thriller uit 2003 speelt Jan Decleir een huurmoordenaar die zijn geheugen verliest?","De zaak Alzheimer"],
+      ["Welke Brusselse mondharmonicaspeler werd wereldberoemd in de jazz?","Toots Thielemans"],
+      ["In welke Franse film uit 2001 maakt een verlegen serveerster uit Montmartre anderen gelukkig?","Le fabuleux destin d'Amélie Poulain (Amélie)"],
+      ["In welke Britse reeks praat het hoofdpersonage van Phoebe Waller-Bridge recht in de camera?","Fleabag"],
+      ["Welke Duitse Netflix-reeks over tijdreizen speelt zich af in het stadje Winden?","Dark"]
+    ]
+  },
+  geel: {
+    makkelijk: [
+      ["Wie zette als eerste mens voet op de maan?","Neil Armstrong"],
+      ["Welke Britse koningin overleed in 2022 na zeventig jaar op de troon?","Elizabeth II"],
+      ["In welk jaar begon de Tweede Wereldoorlog?","1939"],
+      ["Welk schip zonk in 1912 na een botsing met een ijsberg?","De Titanic"],
+      ["Wie is sinds 2013 koning der Belgen?","Filip"],
+      ["Welk virus legde in 2020 de hele wereld stil?","Het coronavirus (covid-19)"],
+      ["Welk land viel Rusland binnen in februari 2022?","Oekraïne"],
+      ["Wie was de eerste zwarte president van de Verenigde Staten?","Barack Obama"],
+      ["Hoe noemen we het vertrek van het Verenigd Koninkrijk uit de Europese Unie?","Brexit"],
+      ["Welke Franse keizer werd in 1815 verslagen in Waterloo?","Napoleon"],
+      ["Welk volk bouwde de piramides van Gizeh?","De oude Egyptenaren"],
+      ["Welke munt verving in 2002 de Belgische frank?","De euro"],
+      ["Wie was de leider van nazi-Duitsland?","Adolf Hitler"],
+      ["In welke stad stonden de Twin Towers?","New York"],
+      ["Wie volgde koningin Elizabeth II op als Brits staatshoofd?","Charles III"],
+      ["Welke ontdekkingsreiziger bereikte Amerika in 1492?","Christoffel Columbus"],
+      ["Welk Joods meisje schreef een dagboek in het Achterhuis in Amsterdam?","Anne Frank"],
+      ["Welke Zuid-Afrikaan zat 27 jaar gevangen en werd daarna president?","Nelson Mandela"],
+      ["Wie won de Amerikaanse presidentsverkiezingen van 2024?","Donald Trump"],
+      ["Wie was president van de Verenigde Staten van 2021 tot begin 2025?","Joe Biden"],
+      ["Welk bouwwerk van duizenden kilometers moest China beschermen tegen invallen?","De Chinese Muur"],
+      ["Van welk rijk was Julius Caesar de leider?","Het Romeinse Rijk"],
+      ["Wie is sinds 2000 de sterke man van Rusland?","Vladimir Poetin"],
+      ["Welke miljardair kocht Twitter in 2022 en doopte het om tot X?","Elon Musk"],
+      ["Hoe heetten de Scandinavische zeevaarders die in de vroege middeleeuwen Europa plunderden?","De Vikingen"],
+      ["Wie werd in 2017 president van Frankrijk en in 2022 herkozen?","Emmanuel Macron"],
+      ["Wie hield de beroemde toespraak 'I have a dream'?","Martin Luther King"],
+      ["Welke Britse prinses stierf in 1997 bij een auto-ongeluk in Parijs?","Prinses Diana"],
+      ["Welke prinses is de troonopvolgster van België?","Prinses Elisabeth"],
+      ["Welke Zweedse tiener begon in 2018 te spijbelen voor het klimaat?","Greta Thunberg"],
+      ["In welk jaar viel de Berlijnse Muur?","1989"]
+    ],
+    gemiddeld: [
+      ["In welk jaar eindigde de Eerste Wereldoorlog?","1918"],
+      ["In welk jaar werd België onafhankelijk?","1830"],
+      ["Welke naam koos de eerste Amerikaanse paus, verkozen in 2025?","Leo XIV"],
+      ["Welke paus overleed op paasmaandag 2025?","Franciscus"],
+      ["Wie werd in februari 2025 premier van België?","Bart De Wever"],
+      ["Welke Parijse kathedraal brandde in 2019 en ging eind 2024 weer open?","De Notre-Dame"],
+      ["Welke Romeinse stad werd in het jaar 79 bedolven door de Vesuvius?","Pompeï"],
+      ["Welke vrouw was bondskanselier van Duitsland van 2005 tot 2021?","Angela Merkel"],
+      ["In welke West-Vlaamse stad staat de Menenpoort?","Ieper"],
+      ["Welke Franse heldin stierf in 1431 op de brandstapel?","Jeanne d'Arc"],
+      ["Welk gebouw in Washington werd bestormd op 6 januari 2021?","Het Capitool"],
+      ["Welke uitvinding liet Alexander Graham Bell in 1876 patenteren?","De telefoon"],
+      ["In welk jaar waren er aanslagen in de luchthaven van Zaventem en metrostation Maalbeek?","2016"],
+      ["Welke Britse premier kreeg de bijnaam 'Iron Lady'?","Margaret Thatcher"],
+      ["In welke kerncentrale in Oekraïne gebeurde in 1986 een zware ramp?","Tsjernobyl"],
+      ["Welke koning der Belgen trad af in 2013?","Albert II"],
+      ["Op welke twee Japanse steden viel in 1945 een atoombom?","Hiroshima en Nagasaki"],
+      ["Welke Belgische koning maakte van Congo zijn privébezit?","Leopold II"],
+      ["Welke uitvinding van Gutenberg veranderde rond 1450 de wereld?","De boekdrukkunst"],
+      ["Welke Engelse koning had zes vrouwen?","Hendrik VIII"],
+      ["Naar welk beroemd scheepswrak dook de duikboot Titan toen ze in 2023 implodeerde?","De Titanic"],
+      ["Wie werd in 2024 premier van het Verenigd Koninkrijk?","Keir Starmer"],
+      ["In welk jaar zette de eerste mens voet op de maan?","1969"],
+      ["Welke Belgische oud-premier werd eind 2019 voorzitter van de Europese Raad?","Charles Michel"],
+      ["Wie was de eerste koning der Belgen?","Leopold I"],
+      ["Welke veldslag uit 1302 herdenkt Vlaanderen elk jaar op 11 juli?","De Guldensporenslag"],
+      ["In welke stad werd aartshertog Frans Ferdinand in 1914 doodgeschoten?","Sarajevo"],
+      ["Welke Sovjetleider voerde glasnost en perestrojka in?","Michail Gorbatsjov"],
+      ["Welke Amerikaanse president werd in 1963 vermoord in Dallas?","John F. Kennedy"],
+      ["In welk jaar viel de Sovjet-Unie uit elkaar?","1991"],
+      ["Van welke farao ontdekte Howard Carter in 1922 het graf?","Toetanchamon"],
+      ["Welke Frankische vorst werd in het jaar 800 tot keizer gekroond?","Karel de Grote"],
+      ["Hoe heet de crisis rond de terugkeer van koning Leopold III na de Tweede Wereldoorlog?","De Koningskwestie"],
+      ["In welk jaar werd Congo onafhankelijk van België?","1960"],
+      ["Welk schandaal dwong president Nixon in 1974 tot aftreden?","Watergate"],
+      ["Welke Duitse monnik maakte in 1517 zijn 95 stellingen bekend?","Maarten Luther"],
+      ["Welke revolutie begon in 1789 met de bestorming van de Bastille?","De Franse Revolutie"],
+      ["Welke Romeinse keizer zou muziek gespeeld hebben terwijl Rome brandde?","Nero"],
+      ["Welke ziekte doodde in de 14de eeuw ongeveer een derde van de Europeanen?","De pest (de Zwarte Dood)"],
+      ["Onder welke naam kennen we de geallieerde landing in Normandië op 6 juni 1944?","D-Day (operatie Overlord)"],
+      ["Welke Britse premier leidde zijn land door de Tweede Wereldoorlog?","Winston Churchill"],
+      ["Welke revolutionair kwam in 1959 aan de macht in Cuba?","Fidel Castro"],
+      ["Welke Belgische stad organiseerde de Olympische Spelen van 1920?","Antwerpen"],
+      ["Welk verdrag uit 1992 legde de basis voor de Europese Unie en de euro?","Het Verdrag van Maastricht"],
+      ["Wie was premier van België van oktober 2020 tot begin 2025?","Alexander De Croo"],
+      ["Wie werd in 2019 de eerste vrouwelijke premier van België?","Sophie Wilmès"],
+      ["Welke Duitse politica is sinds 2019 voorzitter van de Europese Commissie?","Ursula von der Leyen"],
+      ["Welke Syrische president werd in december 2024 verdreven?","Bashar al-Assad"],
+      ["Welke Japanse oud-premier werd in 2022 doodgeschoten tijdens een toespraak?","Shinzo Abe"],
+      ["Welke Russische oppositieleider stierf in februari 2024 in een strafkamp?","Aleksej Navalny"],
+      ["Welke Franse koningin werd in 1793 onthoofd?","Marie-Antoinette"],
+      ["Welke beschaving bouwde de piramide van Chichén Itzá in Mexico?","De Maya's"],
+      ["Welke Portugese zeevaarder leidde de eerste reis rond de wereld maar sneuvelde onderweg?","Ferdinand Magellaan"],
+      ["In welk jaar werd Nelson Mandela president van Zuid-Afrika?","1994"],
+      ["Welke stad was de hoofdstad van West-Duitsland?","Bonn"],
+      ["Wie volgde in 2025 Olaf Scholz op als Duits bondskanselier?","Friedrich Merz"],
+      ["Welk land werd in 2024 het 32ste lid van de NAVO?","Zweden"]
+    ],
+    moeilijk: [
+      ["Welke Belgische koning verongelukte in 1934 bij een rotsbeklimming in Marche-les-Dames?","Albert I"],
+      ["Welke baas van het Wagner-huurlingenleger stierf in 2023 bij een vliegtuigcrash, kort na zijn muiterij?","Jevgeni Prigozjin"],
+      ["Van welke Belgische stad ging in augustus 1914 de universiteitsbibliotheek in vlammen op?","Leuven"],
+      ["In welk jaar viel het West-Romeinse Rijk?","476"],
+      ["In welk jaar viel Constantinopel in handen van de Ottomanen?","1453"],
+      ["Welke vrede maakte in 1648 een einde aan de Tachtigjarige Oorlog?","De Vrede van Münster"],
+      ["Welk verdrag uit 1919 legde Duitsland zware herstelbetalingen op?","Het Verdrag van Versailles"],
+      ["Wie was de eerste premier van het onafhankelijke Congo, vermoord in 1961?","Patrice Lumumba"],
+      ["Welke Belgische koning weigerde in 1990 de abortuswet te ondertekenen?","Boudewijn"],
+      ["Welke Belg werd in 2009 de eerste vaste voorzitter van de Europese Raad?","Herman Van Rompuy"],
+      ["Welke opera in de Muntschouwburg gaf in 1830 het startsein voor de Belgische Revolutie?","De Stomme van Portici"],
+      ["Welke veldslag maakte Willem de Veroveraar in 1066 koning van Engeland?","De Slag bij Hastings"],
+      ["Welk document moest de Engelse koning Jan zonder Land in 1215 ondertekenen?","De Magna Carta"],
+      ["Welke stad was de hoofdstad van het Incarijk?","Cuzco"],
+      ["Welke in Gent geboren keizer heerste over een rijk waar de zon nooit onderging?","Keizer Karel (Karel V)"],
+      ["Welke Spaanse landvoogd veroverde Antwerpen in 1585?","Alexander Farnese, hertog van Parma"],
+      ["Wie was de laatste tsaar van Rusland?","Nicolaas II"],
+      ["In welk jaar riep Mao de Volksrepubliek China uit?","1949"],
+      ["Welke crisis bracht de wereld in oktober 1962 op de rand van een kernoorlog?","De Cubacrisis"],
+      ["Welke Amerikaanse president bestreed de crisis van de jaren dertig met de New Deal?","Franklin D. Roosevelt"],
+      ["In welk jaar kregen Belgische vrouwen stemrecht voor de parlementsverkiezingen?","1948"],
+      ["In welke Waalse gemeente kwamen in 1956 bij een mijnramp 262 mijnwerkers om?","Marcinelle"],
+      ["Welke veerboot kapseisde in 1987 vlak buiten de haven van Zeebrugge?","De Herald of Free Enterprise"],
+      ["In welk Brussels stadion vielen in 1985 39 doden vlak voor een Europese voetbalfinale?","Het Heizelstadion"],
+      ["Welke Britse ontdekkingsreiziger bracht de oostkust van Australië in kaart en stierf in 1779 op Hawaï?","James Cook"],
+      ["Welke Mongoolse heerser stichtte het grootste aaneengesloten rijk uit de geschiedenis?","Dzjengis Khan"],
+      ["Welke stadstaat versloeg Athene in de Peloponnesische Oorlog?","Sparta"],
+      ["Welke Britse koning, de vader van Elizabeth II, regeerde tijdens de Tweede Wereldoorlog?","George VI"],
+      ["Welke Britse verpleegster werd in 1915 in Brussel gefusilleerd door de Duitsers?","Edith Cavell"],
+      ["Welke Vlaamse pater werd heilig verklaard voor zijn werk bij melaatsen op Molokai?","Pater Damiaan"],
+      ["Hoe heette de eerste kunstmaan, die de Sovjet-Unie in 1957 lanceerde?","Spoetnik"],
+      ["Welke Portugees is sinds 2017 secretaris-generaal van de Verenigde Naties?","António Guterres"],
+      ["Welke christendemocraat leidde tussen 1979 en 1992 negen Belgische regeringen?","Wilfried Martens"],
+      ["Hoeveel dagen duurde de Belgische regeringsvorming van 2010-2011, toen een wereldrecord?","541 dagen"],
+      ["Welke Griekse filosoof was de leermeester van Alexander de Grote?","Aristoteles"],
+      ["Welke oorlog tussen Engeland en Frankrijk duurde van 1337 tot 1453?","De Honderdjarige Oorlog"],
+      ["Welke Zuid-Koreaanse president riep in december 2024 de krijgswet uit en werd daarna afgezet?","Yoon Suk-yeol"],
+      ["Welke Venezolaanse oppositieleidster kreeg in 2025 de Nobelprijs voor de Vrede?","María Corina Machado"]
+    ]
+  },
+  paars: {
+    makkelijk: [
+      ["Wie schilderde de Mona Lisa?","Leonardo da Vinci"],
+      ["Wie schreef de Harry Potter-boeken?","J.K. Rowling"],
+      ["Welke Nederlandse schilder sneed een stuk van zijn eigen oor af?","Vincent van Gogh"],
+      ["In welk museum hangt de Mona Lisa?","Het Louvre"],
+      ["Welke Belgische stripheld heeft een hondje dat Bobbie heet?","Kuifje"],
+      ["Wie schreef 'Romeo en Julia'?","William Shakespeare"],
+      ["Uit welk land komen mangastrips?","Japan"],
+      ["Wie schreef 'De Da Vinci Code'?","Dan Brown"],
+      ["Welke twee striphelden verdedigen hun Gallische dorp tegen de Romeinen?","Asterix en Obelix"],
+      ["Welke detective woont in Baker Street 221B?","Sherlock Holmes"],
+      ["Wie schreef 'In de Ban van de Ring'?","J.R.R. Tolkien"],
+      ["Welke blauwe stripfiguurtjes bedacht de Belgische tekenaar Peyo?","De Smurfen"],
+      ["Hoe heet het plassende beeldje in Brussel?","Manneken Pis"],
+      ["Hoe heet de sterkste man in de strips van Suske en Wiske?","Jerom"],
+      ["Welke Franse schilder is bekend om zijn waterlelies?","Claude Monet"],
+      ["Welke boekenreeks van Suzanne Collins speelt zich af in Panem?","The Hunger Games"],
+      ["Hoe heet de Japanse kunst van het papiervouwen?","Origami"],
+      ["Welke taal spraken de oude Romeinen?","Latijn"],
+      ["Hoeveel snaren heeft een gewone gitaar?","Zes"],
+      ["Welk sprookjesfiguur verliest een glazen muiltje op het bal?","Assepoester"],
+      ["Hoe heet de kunst van het schilderen met spuitbussen op muren?","Graffiti"],
+      ["Welk instrument heeft 88 toetsen?","De piano"],
+      ["Welke schrijver bedacht 'Sjakie en de chocoladefabriek' en 'De GVR'?","Roald Dahl"],
+      ["Wat is het eerste boek van de Bijbel?","Genesis"],
+      ["Welke stripcowboy schiet sneller dan zijn schaduw?","Lucky Luke"],
+      ["Welke taal heeft de meeste moedertaalsprekers ter wereld?","Chinees (Mandarijn)"],
+      ["Wie schilderde 'De Nachtwacht'?","Rembrandt"]
+    ],
+    gemiddeld: [
+      ["Welke Belgische schilder zette onder een pijp de woorden 'Ceci n'est pas une pipe'?","René Magritte"],
+      ["Welke anonieme straatkunstenaar liet in 2018 een werk versnipperen tijdens een veiling?","Banksy"],
+      ["Welke Vlaamse barokschilder woonde en werkte in Antwerpen en schilderde 'De Kruisafneming'?","Peter Paul Rubens"],
+      ["Welk beroemd altaarstuk van de gebroeders Van Eyck hangt in de Sint-Baafskathedraal in Gent?","Het Lam Gods"],
+      ["Welke Belgische detective met snor bedacht Agatha Christie?","Hercule Poirot"],
+      ["Welke kunstenaar beschilderde het plafond van de Sixtijnse Kapel?","Michelangelo"],
+      ["Uit welk boek van George Orwell komt 'Big Brother'?","1984"],
+      ["Wie schilderde 'Meisje met de parel'?","Johannes Vermeer"],
+      ["Welke popartkunstenaar maakte zeefdrukken van soepblikken en Marilyn Monroe?","Andy Warhol"],
+      ["Welke Noorse schilder maakte 'De Schreeuw'?","Edvard Munch"],
+      ["Welke schrijfster van 'It Ends with Us' werd razend populair dankzij BookTok?","Colleen Hoover"],
+      ["Welke architect ontwierp de Sagrada Família?","Antoni Gaudí"],
+      ["Welke Vlaamse schrijver schreef 'Het verdriet van België'?","Hugo Claus"],
+      ["Welk stuk fruit plakte kunstenaar Maurizio Cattelan met ducttape aan de muur?","Een banaan"],
+      ["Welke componist schreef zijn Negende Symfonie toen hij al doof was?","Ludwig van Beethoven"],
+      ["Welke Deense schrijver schreef 'De kleine zeemeermin'?","Hans Christian Andersen"],
+      ["Uit welke Belgische stad komen modeontwerpers als Dries Van Noten en Ann Demeulemeester?","Antwerpen"],
+      ["Welke Vlaamse tekenaar bedacht Jommeke?","Jef Nys"],
+      ["In welke Spaanse stad staat het Guggenheim-museum van architect Frank Gehry?","Bilbao"],
+      ["Wie schreef 'De kleine prins'?","Antoine de Saint-Exupéry"],
+      ["Welke Spaanse schilder is bekend om zijn smeltende klokken?","Salvador Dalí"],
+      ["In welke Italiaanse stad staat het beeld van David door Michelangelo?","Florence"],
+      ["In welke stripreeks van Merho spelen Marcel, Charlotte, Fanny en Konstantinopel mee?","De Kiekeboes"],
+      ["Voor welke bouwstijl van rond 1900 is de Brusselse architect Victor Horta bekend?","Art nouveau"],
+      ["Welke schrijver bedacht de boeken waarop 'Game of Thrones' gebaseerd is?","George R.R. Martin"],
+      ["Welke Spaanse kunstenaar schilderde 'Guernica'?","Pablo Picasso"],
+      ["Welke Vlaamse schilder maakte 'De Toren van Babel' en 'De Boerenbruiloft'?","Pieter Bruegel de Oude"],
+      ["Welke schilder uit 's-Hertogenbosch maakte 'De Tuin der Lusten'?","Jheronimus Bosch"],
+      ["Welke Oostenrijkse schilder maakte 'De Kus', vol bladgoud?","Gustav Klimt"],
+      ["Wie schreef 'Oorlog en vrede'?","Leo Tolstoj"],
+      ["Welke Russische schrijver schreef 'Misdaad en straf'?","Fjodor Dostojevski"],
+      ["Welke Colombiaanse schrijver schreef 'Honderd jaar eenzaamheid'?","Gabriel García Márquez"],
+      ["Wie schreef 'De helaasheid der dingen'?","Dimitri Verhulst"],
+      ["Welke Vlaamse schrijfster debuteerde in 2016 met de bestseller 'Het smelt'?","Lize Spit"],
+      ["Wie schreef 'Pride and Prejudice'?","Jane Austen"],
+      ["Wie schreef 'Het parfum', over een moordenaar met een uitzonderlijke neus?","Patrick Süskind"],
+      ["Welke Italiaan schreef 'De naam van de roos'?","Umberto Eco"],
+      ["Welke Spaanse schrijver bedacht Don Quichot?","Miguel de Cervantes"],
+      ["Aan welke Griekse dichter worden de 'Ilias' en de 'Odyssee' toegeschreven?","Homerus"],
+      ["Wie componeerde 'De vier jaargetijden'?","Antonio Vivaldi"],
+      ["Wie componeerde de opera 'Die Zauberflöte'?","Wolfgang Amadeus Mozart"],
+      ["Welke Belg uit Dinant vond de saxofoon uit?","Adolphe Sax"],
+      ["In welk museum in Madrid hangt 'Las Meninas' van Velázquez?","Het Prado"],
+      ["In welk Londens museum ligt de Steen van Rosetta?","Het British Museum"],
+      ["Welke Nederlandse schilder werkte met zwarte lijnen en rode, gele en blauwe vlakken?","Piet Mondriaan"],
+      ["Welke Mexicaanse schilderes is bekend om haar zelfportretten met doorlopende wenkbrauwen?","Frida Kahlo"],
+      ["Welke Belgische kunstenaar bekleedde een plafond in het Koninklijk Paleis met keverschildjes?","Jan Fabre"],
+      ["Welke schilder uit Oostende is bekend om zijn maskers en skeletten?","James Ensor"],
+      ["Onder welke naam kennen we Georges Remi, de tekenaar van Kuifje?","Hergé"],
+      ["Wie bedacht Suske en Wiske?","Willy Vandersteen"],
+      ["Welke Vlaamse tekenaar bedacht Nero?","Marc Sleen"],
+      ["Welke Franse beeldhouwer maakte 'De Denker'?","Auguste Rodin"],
+      ["Bij welke kunststroming horen Monet, Renoir en Degas?","Het impressionisme"],
+      ["Wie schreef de toekomstroman 'Brave New World'?","Aldous Huxley"],
+      ["Welke schrijver liet Gregor Samsa wakker worden als een reusachtig insect?","Franz Kafka"],
+      ["Welke Ierse schrijfster schreef 'Normal People'?","Sally Rooney"],
+      ["In welk ballet van Tsjaikovski wordt prinses Odette betoverd?","Het Zwanenmeer"]
+    ],
+    moeilijk: [
+      ["Welke Vlaamse schrijver schreef 'Oorlog en terpentijn'?","Stefan Hertmans"],
+      ["Welke Franse schrijfster kreeg in 2022 de Nobelprijs voor Literatuur?","Annie Ernaux"],
+      ["Welke Zuid-Koreaanse schrijfster van 'De vegetariër' kreeg in 2024 de Nobelprijs voor Literatuur?","Han Kang"],
+      ["Welke architect ontwierp de glazen piramide van het Louvre?","I.M. Pei"],
+      ["Welke Japanse kunstenares is bekend om haar stippen en pompoenen?","Yayoi Kusama"],
+      ["Welke Belgische choreografe richtte het dansgezelschap Rosas op?","Anne Teresa De Keersmaeker"],
+      ["Welke priester-dichter uit Brugge schreef 'Het Schrijverke'?","Guido Gezelle"],
+      ["Wie schilderde 'Het Arnolfini-portret'?","Jan van Eyck"],
+      ["Welke Ierse schrijver schreef 'Ulysses'?","James Joyce"],
+      ["Wie schreef 'Op zoek naar de verloren tijd'?","Marcel Proust"],
+      ["Welke Aalsterse schrijver schreef 'De Kapellekensbaan'?","Louis Paul Boon"],
+      ["Welke Antwerpse schrijver schreef 'Kaas' en 'Het dwaallicht'?","Willem Elsschot"],
+      ["Welke Belgische schrijfster van 'Stupeur et tremblements' brengt elk jaar een nieuwe roman uit?","Amélie Nothomb"],
+      ["Welke Gentenaar kreeg in 1911 als enige Belg de Nobelprijs voor Literatuur?","Maurice Maeterlinck"],
+      ["Wie schreef 'De Leeuw van Vlaanderen'?","Hendrik Conscience"],
+      ["Welke Luikse schrijver bedacht commissaris Maigret?","Georges Simenon"],
+      ["Welke Italiaanse barokschilder is beroemd om zijn felle contrast tussen licht en donker?","Caravaggio"],
+      ["Wie schilderde 'De geboorte van Venus'?","Sandro Botticelli"],
+      ["Welke Spaanse schilder maakte 'De derde mei 1808'?","Francisco Goya"],
+      ["Welke Russische schilder van de groep Der Blaue Reiter geldt als pionier van de abstracte kunst?","Wassily Kandinsky"],
+      ["Welke kunstenaar stelde in 1917 een urinoir tentoon onder de titel 'Fountain'?","Marcel Duchamp"],
+      ["Welke Belgische surrealist schilderde dromerige stations en heeft een museum in Sint-Idesbald?","Paul Delvaux"],
+      ["Welke Antwerpse schilder is bekend om zijn bleke doeken naar foto's, zoals 'Gaskamer'?","Luc Tuymans"],
+      ["Wie componeerde de 'Boléro'?","Maurice Ravel"],
+      ["Wie componeerde de opera 'Carmen'?","Georges Bizet"],
+      ["Wie componeerde 'Der Ring des Nibelungen'?","Richard Wagner"],
+      ["Welke muziekwedstrijd in Brussel draagt de naam van een Belgische koningin?","De Koningin Elisabethwedstrijd"],
+      ["Welke Amerikaanse architect ontwierp Fallingwater en het Guggenheim-museum in New York?","Frank Lloyd Wright"],
+      ["Welke architect ontwierp de kapel van Ronchamp en de Unité d'Habitation in Marseille?","Le Corbusier"],
+      ["Wie schreef 'De goddelijke komedie'?","Dante Alighieri"],
+      ["Welke Duitse schrijver schreef 'Faust'?","Johann Wolfgang von Goethe"],
+      ["Wie schreef 'Madame Bovary'?","Gustave Flaubert"],
+      ["Wie schreef 'De vreemdeling'?","Albert Camus"],
+      ["Wie schreef 'De ondraaglijke lichtheid van het bestaan'?","Milan Kundera"],
+      ["Wie schreef 'The Handmaid's Tale'?","Margaret Atwood"],
+      ["Welke Japanse schrijver schreef 'Norwegian Wood' en 'Kafka op het strand'?","Haruki Murakami"],
+      ["Welke Nederlandse schrijver schreef 'De ontdekking van de hemel'?","Harry Mulisch"],
+      ["Onder welk pseudoniem schreef Eduard Douwes Dekker 'Max Havelaar'?","Multatuli"],
+      ["Wie schreef 'Wil', een roman over Antwerpen tijdens de bezetting?","Jeroen Olyslaegers"],
+      ["Welke Vlaamse schrijver schreef 'Congo. Een geschiedenis'?","David Van Reybrouck"],
+      ["Welke Nederlandse graficus tekende onmogelijke trappen en eindeloze vlakvullingen?","M.C. Escher"],
+      ["Welke Britse kunstenaar zette een haai op sterk water?","Damien Hirst"],
+      ["Welke Amerikaanse schilder werd beroemd door verf op het doek te druppelen?","Jackson Pollock"],
+      ["Welke Belgische tekenaar bedacht Guust Flater en de Marsupilami?","André Franquin"],
+      ["Welke Hongaarse schrijver kreeg in 2025 de Nobelprijs voor Literatuur?","László Krasznahorkai"]
+    ]
+  },
+  groen: {
+    makkelijk: [
+      ["Wat is de chemische formule van water?","H₂O"],
+      ["Wat is het grootste dier ter wereld?","De blauwe vinvis"],
+      ["Hoeveel poten heeft een spin?","Acht"],
+      ["Welk bedrijf maakt de iPhone?","Apple"],
+      ["Welke chatbot van OpenAI kwam eind 2022 uit en maakte AI bekend bij het grote publiek?","ChatGPT"],
+      ["Welke planeet noemen we de rode planeet?","Mars"],
+      ["Welk gas hebben mensen nodig om te ademen?","Zuurstof"],
+      ["Wat is het snelste landdier?","Het jachtluipaard (de cheeta)"],
+      ["Welk automerk van Elon Musk bouwt alleen elektrische wagens?","Tesla"],
+      ["Hoeveel planeten telt ons zonnestelsel?","Acht"],
+      ["Welk orgaan pompt het bloed door je lichaam?","Het hart"],
+      ["Welke wetenschapper bedacht de relativiteitstheorie?","Albert Einstein"],
+      ["Welk zwart-wit dier staat in het logo van het WWF?","De reuzenpanda"],
+      ["Hoeveel poten heeft een insect?","Zes"],
+      ["Welk bedrijf zit achter Facebook, Instagram en WhatsApp?","Meta"],
+      ["Wat is de grootste planeet van ons zonnestelsel?","Jupiter"],
+      ["Bij hoeveel graden Celsius kookt water?","100 graden"],
+      ["Wat is het enige zoogdier dat echt kan vliegen?","De vleermuis"],
+      ["Wat meet je met een thermometer?","De temperatuur"],
+      ["Wat is het hardste natuurlijke materiaal?","Diamant"],
+      ["Welke vleesetende dinosaurus is bekend om zijn korte voorpootjes?","Tyrannosaurus rex"],
+      ["Hoe heet de ster in het midden van ons zonnestelsel?","De zon"],
+      ["Welk Australisch dier draagt zijn jong in een buidel en verplaatst zich al springend?","De kangoeroe"],
+      ["Met welke drie letters duiden we ons erfelijk materiaal aan?","DNA"],
+      ["Welke geleerde bedacht de wetten van de zwaartekracht, volgens de legende na een vallende appel?","Isaac Newton"],
+      ["Welke mensaap is het nauwst verwant aan de mens?","De chimpansee (en de bonobo)"],
+      ["Welk hemellichaam draait rond de aarde?","De maan"],
+      ["Van welke boom komen eikels?","De eik"],
+      ["Welk bedrijf maakt Android en de bekendste zoekmachine ter wereld?","Google"],
+      ["Wat is het hoogste dier ter wereld?","De giraf"],
+      ["In welk dier verandert een rups?","Een vlinder"],
+      ["Voor welk broeikasgas staat de formule CO₂?","Koolstofdioxide (koolzuurgas)"],
+      ["Welke vogel kan niet vliegen, zwemt uitstekend en leeft op Antarctica?","De pinguïn"],
+      ["Welke planeet staat het dichtst bij de zon?","Mercurius"],
+      ["Wat is het grootste orgaan van het menselijk lichaam?","De huid"]
+    ],
+    gemiddeld: [
+      ["Welke ruimtetelescoop werd eind 2021 gelanceerd als opvolger van Hubble?","De James Webb-telescoop"],
+      ["Welk vogeltje kan achteruit vliegen?","De kolibrie"],
+      ["Hoe heet het proces waarbij planten zonlicht omzetten in energie?","Fotosynthese"],
+      ["Hoe heet de reusachtige raket van SpaceX, de grootste ooit gebouwd?","Starship"],
+      ["Welk metaal is vloeibaar bij kamertemperatuur?","Kwik"],
+      ["Hoeveel harten heeft een octopus?","Drie"],
+      ["Welke vitamine maakt je lichaam aan dankzij zonlicht?","Vitamine D"],
+      ["Wat is de wetenschappelijke naam van de moderne mens?","Homo sapiens"],
+      ["Hoeveel tanden heeft een volwassen mens, verstandskiezen inbegrepen?","32"],
+      ["Hoe heet het NASA-programma dat opnieuw mensen naar de maan stuurt?","Artemis"],
+      ["In welke eenheid meten we elektrische spanning?","Volt"],
+      ["Welke digitale munt werd in 2009 bedacht door de mysterieuze Satoshi Nakamoto?","Bitcoin"],
+      ["Wie was in 1992 de eerste Belg in de ruimte?","Dirk Frimout"],
+      ["Welk hormoon regelt je bloedsuiker en moeten veel diabetespatiënten inspuiten?","Insuline"],
+      ["Ongeveer hoeveel procent van het aardoppervlak is bedekt met water?","Ongeveer 70 procent"],
+      ["Welk edelmetaal heeft als symbool Au?","Goud"],
+      ["Welk diabetesmedicijn werd wereldwijd een hype als afslankprik?","Ozempic"],
+      ["Ongeveer hoeveel minuten heeft zonlicht nodig om de aarde te bereiken?","Ongeveer 8 minuten"],
+      ["Welke app voor korte filmpjes is van het Chinese bedrijf ByteDance?","TikTok"],
+      ["Welk chemisch element heeft als symbool Fe?","IJzer"],
+      ["Welk gas maakt ongeveer 78 procent van de lucht uit?","Stikstof"],
+      ["Hoeveel botten heeft een volwassen mens?","206"],
+      ["Welke planeet heeft de meeste bekende manen?","Saturnus"],
+      ["Welk hemellichaam was tot 2006 officieel de negende planeet?","Pluto"],
+      ["Hoe heet het sterrenstelsel waarin de aarde ligt?","De Melkweg"],
+      ["Hoe snel gaat licht, afgerond in kilometer per seconde?","300.000 kilometer per seconde"],
+      ["Welke wetenschapster kreeg twee Nobelprijzen voor haar onderzoek naar radioactiviteit?","Marie Curie"],
+      ["Wie ontdekte in 1928 de penicilline?","Alexander Fleming"],
+      ["Welke bioloog schreef 'Over het ontstaan van soorten'?","Charles Darwin"],
+      ["Welke Belgische priester en sterrenkundige bedacht de oerknaltheorie?","Georges Lemaître"],
+      ["In welk lichaamsdeel zit de stijgbeugel, het kleinste botje van de mens?","In het oor"],
+      ["Welk orgaan maakt gal aan?","De lever"],
+      ["Hoeveel holtes heeft het menselijk hart?","Vier"],
+      ["Welke bloedcellen vervoeren zuurstof door het lichaam?","De rode bloedcellen"],
+      ["Welk Australisch zoogdier legt eieren en heeft een snavel?","Het vogelbekdier"],
+      ["Welke roofvogel is in duikvlucht het snelste dier ter wereld?","De slechtvalk"],
+      ["Welk landdier is het langst drachtig, bijna twee jaar?","De olifant"],
+      ["Welke pH-waarde heeft zuiver water?","7"],
+      ["Wat meet je met de schaal van Richter?","De kracht van aardbevingen"],
+      ["Welke laag in de atmosfeer beschermt ons tegen uv-straling?","De ozonlaag"],
+      ["Welk Duits bedrijf ontwikkelde samen met Pfizer een van de eerste coronavaccins?","BioNTech"],
+      ["Welke vaccintechniek, bekend van corona, leverde in 2023 een Nobelprijs op?","mRNA"],
+      ["Welke chipmaker van topman Jensen Huang werd dankzij AI het waardevolste bedrijf ter wereld?","Nvidia"],
+      ["Welk bedrijf maakt de AI-assistent Claude?","Anthropic"],
+      ["Welk Chinees AI-model deed begin 2025 de techaandelen kelderen?","DeepSeek"],
+      ["Welk Leuvens onderzoekscentrum behoort tot de wereldtop in chiptechnologie?","imec"],
+      ["In welke eenheid meten we elektrische weerstand?","Ohm"],
+      ["Wat is het meest voorkomende element in het heelal?","Waterstof"],
+      ["Welk edelgas gaf zijn naam aan felgekleurde lichtreclames?","Neon"],
+      ["Bij hoeveel graden Celsius ligt het absolute nulpunt, afgerond?","Min 273 graden"],
+      ["Welke ruimtesonde uit 1977 is het verst van de aarde verwijderd?","Voyager 1"],
+      ["Hoe heet de marsrover die in 2021 landde met het helikoptertje Ingenuity?","Perseverance"],
+      ["Een tekort aan welke vitamine veroorzaakt scheurbuik?","Vitamine C"],
+      ["Wat is de grootste vis ter wereld?","De walvishaai"],
+      ["Welke Belgische astronaut was in 2009 commandant van het internationaal ruimtestation ISS?","Frank De Winne"]
+    ],
+    moeilijk: [
+      ["Welke ster staat, na de zon, het dichtst bij de aarde?","Proxima Centauri"],
+      ["Welke Belg kreeg in 2013 samen met Peter Higgs de Nobelprijs voor Natuurkunde?","François Englert"],
+      ["Welke naaldboom verliest in de herfst zijn naalden?","De lork (lariks)"],
+      ["Welke Belg werd in 2022 door ESA geselecteerd als astronaut?","Raphaël Liégeois"],
+      ["Welk chemisch element heeft als symbool W?","Wolfraam"],
+      ["Welk chemisch element heeft als symbool K?","Kalium"],
+      ["Welk chemisch element heeft als symbool Na?","Natrium"],
+      ["Welk onderdeel van de cel wordt haar energiecentrale genoemd?","Het mitochondrium"],
+      ["Hoeveel chromosomen zitten er in een menselijke lichaamscel?","46"],
+      ["Wat is het langste bot van het menselijk lichaam?","Het dijbeen"],
+      ["Welke Brusselse arts schreef in 1543 het eerste grote anatomieboek, 'De humani corporis fabrica'?","Andreas Vesalius"],
+      ["Welke Gentenaar vond het bakeliet uit, de eerste volledig synthetische kunststof?","Leo Baekeland"],
+      ["Welke Vlaamse cartograaf uit de 16de eeuw gaf zijn naam aan een beroemde kaartprojectie?","Gerardus Mercator"],
+      ["Welke Belgische industrieel bedacht een procedé om soda te maken en organiseerde beroemde natuurkundecongressen?","Ernest Solvay"],
+      ["Welke Belg kreeg in 1974 de Nobelprijs voor Geneeskunde voor zijn onderzoek naar de cel?","Christian de Duve"],
+      ["In welke eenheid meten we frequentie?","Hertz"],
+      ["Wat is de eenheid van kracht?","Newton"],
+      ["Waarvoor staat de letter c in de formule E = mc²?","De lichtsnelheid"],
+      ["Welke planeet heeft de kortste dag en draait in minder dan tien uur om haar as?","Jupiter"],
+      ["Welke planeet is de heetste van ons zonnestelsel?","Venus"],
+      ["Hoe heet de grootste maan van Saturnus?","Titan"],
+      ["Wat is de grootste maan van ons zonnestelsel?","Ganymedes"],
+      ["Welke komeet is ongeveer om de 76 jaar vanaf de aarde te zien?","De komeet Halley"],
+      ["Hoe heet de grens rond een zwart gat waarachter niets nog kan ontsnappen?","De waarnemingshorizon"],
+      ["Welke Deense natuurkundige bedacht in 1913 een atoommodel met elektronen in vaste banen?","Niels Bohr"],
+      ["Welk zoogdier is als enige bedekt met schubben?","Het schubdier"],
+      ["Hoe noem je een dier dat tegelijk mannelijk en vrouwelijk is?","Een hermafrodiet"],
+      ["Welke boomsoort uit Californië wordt het hoogst van alle bomen?","De kustsequoia (kustmammoetboom)"],
+      ["Hoe heet de wetenschap die schimmels bestudeert?","Mycologie"],
+      ["Welk gas ruikt naar rotte eieren?","Waterstofsulfide"],
+      ["Welk vulkanisch gesteente blijft drijven op water?","Puimsteen"],
+      ["Hoe heet het supercontinent waarin alle landmassa's ooit aan elkaar hingen?","Pangea"],
+      ["Aan het einde van welk geologisch tijdperk stierven de dinosauriërs uit?","Het krijt"],
+      ["Welke programmeertaal is genoemd naar de komieken van Monty Python?","Python"],
+      ["Welke 19de-eeuwse wiskundige geldt als de eerste programmeur ooit?","Ada Lovelace"],
+      ["Welke Britse wiskundige hielp de Duitse Enigmacode kraken?","Alan Turing"],
+      ["Waarvoor staan de letters GPT in ChatGPT?","Generative Pre-trained Transformer"],
+      ["Welk bedrijf uit Veldhoven bouwt de machines waarmee de modernste chips worden gemaakt?","ASML"],
+      ["Welk AI-programma van Google DeepMind voorspelt de vorm van eiwitten en leverde in 2024 een Nobelprijs op?","AlphaFold"]
+    ]
+  },
+  oranje: {
+    makkelijk: [
+      ["Welk land won het WK voetbal van 2022?","Argentinië"],
+      ["In welke stad vonden de Olympische Zomerspelen van 2024 plaats?","Parijs"],
+      ["Hoeveel spelers heeft een voetbalploeg op het veld?","Elf"],
+      ["Hoeveel ringen telt het olympische logo?","Vijf"],
+      ["Welke kleur heeft de trui van de leider in de Tour de France?","Geel"],
+      ["Welke Jamaicaan heeft het wereldrecord op de 100 meter?","Usain Bolt"],
+      ["Wat is de bijnaam van de Belgische nationale voetbalploeg bij de mannen?","De Rode Duivels"],
+      ["In welke sport is de Amerikaanse Simone Biles een superster?","Turnen"],
+      ["Welk land won het EK voetbal van 2024?","Spanje"],
+      ["Welke basketbalster heeft de bijnaam 'King James'?","LeBron James"],
+      ["In welk bordspel koop je straten en zet je er huizen en hotels op?","Monopoly"],
+      ["In welke sport zwem, fiets en loop je na elkaar?","Triatlon"],
+      ["Welke racketsport speel je met vier in een kooi met glazen wanden?","Padel"],
+      ["In welk kaartspel roep je de naam van het spel als je nog één kaart hebt?","UNO"],
+      ["Welke wielerklassieker noemen ze 'Vlaanderens Mooiste'?","De Ronde van Vlaanderen"],
+      ["In welke sport kun je een hole-in-one slaan?","Golf"],
+      ["Welk land organiseerde het WK voetbal van 2022?","Qatar"],
+      ["In welke game bouw je met blokken en moet je oppassen voor Creepers?","Minecraft"],
+      ["Op welke ondergrond wordt Roland Garros gespeeld?","Gravel"],
+      ["Welke Portugese voetballer heeft de bijnaam CR7?","Cristiano Ronaldo"],
+      ["Met hoeveel pionnen begint elke speler een schaakpartij?","Acht"],
+      ["Hoe heet de finale van het American football, bekend om zijn halftime show?","De Super Bowl"],
+      ["Welke game met honderd spelers per potje is bekend om zijn dansjes en de Battle Bus?","Fortnite"],
+      ["Welke sport spelen ze op het gras van Wimbledon?","Tennis"],
+      ["Hoeveel spelers heeft een volleybalploeg op het veld?","Zes"],
+      ["Welke cijfers vul je in bij een klassieke sudoku?","De cijfers 1 tot en met 9"],
+      ["Hoeveel velden telt een schaakbord?","64"]
+    ],
+    gemiddeld: [
+      ["Welke Belgische wielrenner won in 2024 olympisch goud in de wegrit én de tijdrit?","Remco Evenepoel"],
+      ["Welke Nederlandse coureur werd van 2021 tot 2024 vier keer op rij wereldkampioen Formule 1?","Max Verstappen"],
+      ["In welke atletiekdiscipline won Nafi Thiam drie keer olympisch goud?","De zevenkamp"],
+      ["Welke Sloveen won de Tour de France in 2020, 2021, 2024 en 2025?","Tadej Pogačar"],
+      ["Welke Serviër won 24 grandslamtitels, een record bij de mannen?","Novak Djokovic"],
+      ["Hoeveel punten is de roos in het midden van een dartsbord waard?","50"],
+      ["Welke Rode Duivel verliet Manchester City in 2025 voor Napoli?","Kevin De Bruyne"],
+      ["Welke Limburgse tennisster won vier grandslamtitels en werd als mama opnieuw nummer één?","Kim Clijsters"],
+      ["Welke Argentijn won acht keer de Gouden Bal?","Lionel Messi"],
+      ["Hoe heet de Belgische hockeyploeg die olympisch goud won in Tokio?","De Red Lions"],
+      ["Welke Nederlandse wielrenner is de kleinzoon van Raymond Poulidor?","Mathieu van der Poel"],
+      ["Welke Belgische wielrenner uit Herentals won in 2022 de groene trui in de Tour de France?","Wout van Aert"],
+      ["Welke Amerikaanse zwemmer won 23 keer olympisch goud?","Michael Phelps"],
+      ["Welke Belgische eersteklasser speelt net als Cercle in het Jan Breydelstadion?","Club Brugge"],
+      ["Welke Franse spits verhuisde in 2024 van Paris Saint-Germain naar Real Madrid?","Kylian Mbappé"],
+      ["Welke Japanse vechtsport betekent letterlijk 'zachte weg'?","Judo"],
+      ["Welke stad organiseert de Olympische Zomerspelen van 2028?","Los Angeles"],
+      ["In welk land vonden de Olympische Winterspelen van 2026 plaats?","Italië (Milaan en Cortina)"],
+      ["In welk bordspel ruil je hout, graan en erts om dorpen en steden te bouwen?","Catan"],
+      ["Welke Spanjaard won veertien keer Roland Garros?","Rafael Nadal"],
+      ["Welke Engelse tiener werd begin 2025 op zijn zeventiende wereldkampioen darts?","Luke Littler"],
+      ["Welke Belgische doelman won in 2022 de Champions League met Real Madrid?","Thibaut Courtois"],
+      ["Welke Franse club won in 2025 voor het eerst de Champions League?","Paris Saint-Germain"],
+      ["Welke drie landen organiseerden samen het WK voetbal van 2026?","De Verenigde Staten, Canada en Mexico"],
+      ["Voor welk Italiaans Formule 1-team rijdt Lewis Hamilton sinds 2025?","Ferrari"],
+      ["Welke Britse McLaren-coureur werd in 2025 wereldkampioen Formule 1?","Lando Norris"],
+      ["Hoe lang is een marathon precies?","42,195 kilometer"],
+      ["Welke Belg won vijf keer de Tour de France?","Eddy Merckx"],
+      ["Welke Belgische tennisster won zeven grandslamtitels, waarvan vier op Roland Garros?","Justine Henin"],
+      ["Welk land won het WK voetbal van 2018, waar België derde werd?","Frankrijk"],
+      ["Welke Spaanse bondscoach leidde de Rode Duivels naar brons op het WK van 2018?","Roberto Martínez"],
+      ["Wie is de topschutter aller tijden van de Rode Duivels?","Romelu Lukaku"],
+      ["Welke Brusselse club werd in 2025 voor het eerst in negentig jaar Belgisch kampioen?","Union Saint-Gilloise"],
+      ["Op welk circuit in de Ardennen wordt de Grote Prijs van België gereden?","Spa-Francorchamps"],
+      ["Welke Zweedse polsstokspringer verbetert keer op keer zijn eigen wereldrecord?","Armand Duplantis"],
+      ["Welke Belgische hoogspringster won olympisch goud in Peking in 2008?","Tia Hellebaut"],
+      ["Welke Belgische turnster won in Tokio olympisch goud aan de brug met ongelijke leggers?","Nina Derwael"],
+      ["Welke Belgische wielrenster werd in 2023 en 2024 wereldkampioene op de weg?","Lotte Kopecky"],
+      ["Welke Deen won de Tour de France in 2022 en 2023?","Jonas Vingegaard"],
+      ["Welke kasseiklassieker eindigt op een wielerpiste in Noord-Frankrijk?","Parijs-Roubaix"],
+      ["Welke Belg won, net als Roger De Vlaeminck, vier keer Parijs-Roubaix?","Tom Boonen"],
+      ["Hoeveel spelers heeft een rugbyploeg op het veld bij rugby union?","Vijftien"],
+      ["Hoeveel punten levert een touchdown op in American football?","Zes"],
+      ["Welke Franse basketter van 2,24 meter speelt in de NBA bij de San Antonio Spurs?","Victor Wembanyama"],
+      ["Welke Italiaan werd in 2024 de nummer één van het mannentennis?","Jannik Sinner"],
+      ["Welke Spanjaard won Wimbledon in 2023 en 2024?","Carlos Alcaraz"],
+      ["Welke Noor was wereldkampioen schaken van 2013 tot 2023?","Magnus Carlsen"],
+      ["Hoeveel punten is de zwarte bal waard bij snooker?","Zeven"],
+      ["Welke Belg werd in 2023 wereldkampioen snooker?","Luca Brecel"],
+      ["Welke Australische stad organiseert de Olympische Zomerspelen van 2032?","Brisbane"],
+      ["Welke Spaanse middenvelder won de Gouden Bal in 2024?","Rodri"],
+      ["Welke Franse aanvaller won de Gouden Bal in 2025?","Ousmane Dembélé"],
+      ["Welk land won het EK voetbal dat in de zomer van 2021 werd gespeeld?","Italië"],
+      ["In welk bordspel zoek je de moordenaar onder verdachten als kolonel Mosterd?","Cluedo"],
+      ["Hoeveel vakjes telt een Monopolybord?","40"],
+      ["Welke Belgische motorcrosser werd tien keer wereldkampioen?","Stefan Everts"],
+      ["In welke sport spreek je van een birdie, een eagle en een bogey?","Golf"],
+      ["Welke Keniaan liep in 2019 als eerste een marathon in minder dan twee uur?","Eliud Kipchoge"],
+      ["Welke Belgische marathonloper won olympisch brons in Tokio en zilver in Parijs?","Bashir Abdi"]
+    ],
+    moeilijk: [
+      ["Welke Belgische club won in 1988 de Europacup II?","KV Mechelen"],
+      ["Welke Indiase tiener werd eind 2024 de jongste wereldkampioen schaken ooit?","Gukesh Dommaraju"],
+      ["Op welke hoogte hangt een basketbalring?","3,05 meter"],
+      ["In welk land werd padel uitgevonden?","Mexico"],
+      ["Welke Belg won in 1976 als voorlopig laatste landgenoot de Tour de France?","Lucien Van Impe"],
+      ["Welke Brit won de Ronde van Italië in 2025?","Simon Yates"],
+      ["Welke renner won Parijs-Roubaix in 2023, 2024 en 2025?","Mathieu van der Poel"],
+      ["Welk land won in 1930 het allereerste WK voetbal?","Uruguay"],
+      ["Welke doelman van de Rode Duivels werd een ster op het WK van 1986 in Mexico?","Jean-Marie Pfaff"],
+      ["Naar welke Belgische voetballer is het arrest uit 1995 genoemd dat de transfermarkt openbrak?","Jean-Marc Bosman"],
+      ["Welke club won de eerste vijf edities van de Europacup I?","Real Madrid"],
+      ["Welke Belgische club won twee keer de Europacup II en in 1983 de UEFA Cup?","Anderlecht"],
+      ["Welke Belgische club verloor in 1978 de finale van de Europacup I tegen Liverpool?","Club Brugge"],
+      ["Welke club werd in 2016 tegen alle verwachtingen in kampioen van Engeland?","Leicester City"],
+      ["Welke Amerikaanse atleet won vier keer goud op de Spelen van Berlijn in 1936?","Jesse Owens"],
+      ["In welke stad vonden in 1896 de eerste moderne Olympische Spelen plaats?","Athene"],
+      ["Welke Roemeense turnster kreeg in 1976 als eerste een perfecte 10 op de Spelen?","Nadia Comăneci"],
+      ["Welke Belgische zwemmer won in 1996 olympisch goud op de 100 meter schoolslag?","Fred Deburghgraeve"],
+      ["Welke Belgische judoka won olympisch goud in Atlanta in 1996?","Ulla Werbrouck"],
+      ["Welke Belgische sprintster won met de estafetteploeg het olympisch goud van Peking 2008?","Kim Gevaert"],
+      ["Hoe heet de Belgische estafetteploeg op de 4 x 400 meter bij de mannen?","De Belgian Tornados"],
+      ["Welke Belgische tennisser haalde in 2017 de finale van de ATP Finals?","David Goffin"],
+      ["Hoeveel pijlen heb je minstens nodig om een leg van 501 uit te gooien bij darts?","Negen"],
+      ["Wat is de hoogste break die je normaal kunt maken bij snooker?","147"],
+      ["Welke Antwerpse darter won in 2020 de World Matchplay?","Dimitri Van den Bergh"],
+      ["In welke sport is de Stanley Cup de hoofdprijs?","IJshockey"],
+      ["Welk land won het WK rugby in 2019 én in 2023?","Zuid-Afrika"],
+      ["Welke Nederlandse schaatser won op drie Winterspelen op rij goud op de 5000 meter?","Sven Kramer"],
+      ["Welke Belg won in 2022 olympisch goud op de massastart bij het schaatsen?","Bart Swings"],
+      ["Welke Duitse coureur werd, net als Lewis Hamilton, zeven keer wereldkampioen Formule 1?","Michael Schumacher"],
+      ["Welke Belgische coureur won zes keer de 24 uur van Le Mans?","Jacky Ickx"],
+      ["Welke Franse renster won de Tour de France Femmes in 2025?","Pauline Ferrand-Prévot"],
+      ["In welk Afrikaans land werd in 2025 het WK wielrennen gereden?","Rwanda"],
+      ["In welke atletiekdiscipline gebruik je de Fosbury-flop?","Hoogspringen"],
+      ["Hoeveel vakjes telt een scrabblebord?","225"],
+      ["In welk bordspel uit 2019 lok je vogels naar je eigen natuurgebied?","Wingspan"],
+      ["Welke Franse game werd eind 2025 uitgeroepen tot Game of the Year?","Clair Obscur: Expedition 33"],
+      ["Welke Belg won de olympische wegrit in Rio in 2016?","Greg Van Avermaet"]
+    ]
+  }
 };
 
 const THEMAS = [
@@ -682,8 +1159,19 @@ const THEMAS = [
 ];
 const OGEN = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
 const WOORD = ["", "Eén", "Twee", "Drie", "Vier", "Vijf", "Zes"];
-const SLEUTEL = "vragenbak-v2";
-const OUDE_SLEUTEL = "vragenbak-v1";
+/* Drie niveaus: bij een juist antwoord gaat de loper op de buitenbaan zoveel vakjes vooruit. */
+const NIVEAUS = [
+  { id: "makkelijk", naam: "Makkelijk", vakjes: 1 },
+  { id: "gemiddeld", naam: "Gemiddeld", vakjes: 2 },
+  { id: "moeilijk",  naam: "Moeilijk",  vakjes: 3 }
+];
+const niveauVan = (id) => NIVEAUS.find((n) => n.id === id);
+const vakjesTekst = (n) => (n === 1 ? "1 vakje" : n + " vakjes");
+/* Regelboekje: worp 1-2 is makkelijk, 3-4 gemiddeld, 5-6 moeilijk. */
+const niveauVanWorp = (worp) => (worp ? NIVEAUS[Math.ceil(worp / 2) - 1] : null);
+const lijstVan = (thema, niveau) => (VRAGEN[thema] && VRAGEN[thema][niveau]) || [];
+const SLEUTEL = "vragenbak-v3";
+const OUDE_SLEUTEL = "vragenbak-v2";
 const $ = (id) => document.getElementById(id);
 
 /* Bewaard op dit toestel: welke vragen al geweest zijn en de vijfde kleur.
@@ -710,7 +1198,7 @@ function willekeurig(n) {
   } catch (e) { return Math.floor(Math.random() * n); }
 }
 
-const staat = { worp: 0, scherm: "start", thema: null, index: -1, getoond: false, herschud: false };
+const staat = { worp: 0, scherm: "start", thema: null, niveau: null, index: -1, getoond: false, herschud: false };
 let rolt = false;
 
 function themaVan(id) { return THEMAS.find((t) => t.id === id); }
@@ -736,9 +1224,42 @@ function tekenRooster() {
     const k = document.createElement("span"); k.className = "vak-kleur"; k.textContent = t.kleur;
     const n = document.createElement("span"); n.className = "vak-thema"; n.textContent = t.thema;
     b.append(k, n);
-    b.addEventListener("click", () => nieuweVraag(t.id));
+    b.addEventListener("click", () => kiesKleur(t.id));
     rooster.append(b);
   });
+}
+
+function tekenNiveaus() {
+  const doos = $("niveaus");
+  doos.textContent = "";
+  const volgensWorp = niveauVanWorp(staat.worp);
+  NIVEAUS.forEach((n) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "niveau" + (volgensWorp === n ? " worp" : "");
+    const tekst = document.createElement("span"); tekst.className = "niveau-tekst";
+    const naam = document.createElement("span"); naam.className = "niveau-naam"; naam.textContent = n.naam;
+    const sub = document.createElement("span"); sub.className = "niveau-sub"; sub.textContent = "Juist? Loper " + vakjesTekst(n.vakjes) + " vooruit";
+    tekst.append(naam, sub);
+    b.append(tekst);
+    if (volgensWorp === n) {
+      const merk = document.createElement("span"); merk.className = "niveau-merk"; merk.textContent = "Jullie worp";
+      b.append(merk);
+    }
+    b.addEventListener("click", () => nieuweVraag(staat.thema, n.id));
+    doos.append(b);
+  });
+  $("niveau-uitleg").textContent = volgensWorp
+    ? "Je gooide " + staat.worp + ": volgens het regelboekje is dat " + volgensWorp.naam.toLowerCase() + ". Spelen jullie met vrije keuze, tik dan het niveau aan dat je wilt."
+    : "Hoe moeilijker de vraag, hoe verder je loper mag bij een juist antwoord.";
+}
+
+function kiesKleur(id) {
+  houWakker();
+  staat.thema = id; staat.niveau = null; staat.index = -1; staat.getoond = false; staat.herschud = false;
+  staat.scherm = "niveau";
+  teken();
+  window.scrollTo(0, 0);
 }
 
 function tekenSteen(n) {
@@ -753,11 +1274,14 @@ function toonWorp() {
     tekenSteen(5);
     $("worp-groot").textContent = "Gooi";
     $("worp-klein").textContent = "Tik om te gooien";
+    $("worp-niveau").hidden = true;
     return;
   }
   tekenSteen(staat.worp);
   $("worp-groot").textContent = WOORD[staat.worp];
-  $("worp-klein").textContent = staat.worp === 1 ? "Zet je pion 1 vakje verder" : "Zet je pion " + staat.worp + " vakjes verder";
+  $("worp-klein").textContent = vakjesTekst(staat.worp) + " verder op het wiel";
+  $("worp-niveau").textContent = "Niveau van deze worp: " + niveauVanWorp(staat.worp).naam.toLowerCase();
+  $("worp-niveau").hidden = false;
 }
 
 function gooi() {
@@ -773,6 +1297,7 @@ function gooi() {
   steen.classList.add("rolt");
   $("worp-groot").textContent = "…";
   $("worp-klein").textContent = "De steen rolt";
+  $("worp-niveau").hidden = true;
   const flits = setInterval(() => tekenSteen(willekeurig(6) + 1), 80);
   setTimeout(() => {
     clearInterval(flits);
@@ -784,18 +1309,20 @@ function gooi() {
   }, 700);
 }
 
-function nieuweVraag(id) {
+function nieuweVraag(id, niveau) {
   houWakker();
-  const lijst = VRAGEN[id];
-  let gezien = (bak.gezien[id] || []).filter((i) => i >= 0 && i < lijst.length);
+  const lijst = lijstVan(id, niveau);
+  if (!lijst.length) return;
+  const vak = id + ":" + niveau;
+  let gezien = (bak.gezien[vak] || []).filter((i) => i >= 0 && i < lijst.length);
   let over = lijst.map((_, i) => i).filter((i) => !gezien.includes(i));
   staat.herschud = false;
   if (!over.length) { gezien = []; over = lijst.map((_, i) => i); staat.herschud = true; }
   const index = over[willekeurig(over.length)];
   gezien.push(index);
-  bak.gezien[id] = gezien;
+  bak.gezien[vak] = gezien;
   bewaar();
-  staat.thema = id; staat.index = index; staat.getoond = false; staat.scherm = "vraag";
+  staat.thema = id; staat.niveau = niveau; staat.index = index; staat.getoond = false; staat.scherm = "vraag";
   teken();
   window.scrollTo(0, 0);
 }
@@ -808,29 +1335,40 @@ function naarStart() {
 
 function telOver() {
   let totaal = 0, over = 0;
-  THEMAS.forEach((t) => {
-    const n = VRAGEN[t.id].length;
+  THEMAS.forEach((t) => NIVEAUS.forEach((niv) => {
+    const n = lijstVan(t.id, niv.id).length;
     totaal += n;
-    over += n - Math.min(n, (bak.gezien[t.id] || []).length);
-  });
+    over += n - Math.min(n, (bak.gezien[t.id + ":" + niv.id] || []).length);
+  }));
   $("teller").textContent = "Nog " + over + " van de " + totaal + " vragen niet gezien op dit toestel.";
 }
 
 function teken() {
-  const opVraag = staat.scherm === "vraag" && staat.thema && VRAGEN[staat.thema] && VRAGEN[staat.thema][staat.index];
-  $("start").hidden = !!opVraag;
-  $("vraag").hidden = !opVraag;
-  document.body.classList.toggle("is-vraag", !!opVraag);
-  if (opVraag) {
-    const t = themaVan(staat.thema);
-    const [v, a] = VRAGEN[staat.thema][staat.index];
+  const t = staat.thema ? themaVan(staat.thema) : null;
+  const vraag = staat.scherm === "vraag" && t ? lijstVan(staat.thema, staat.niveau)[staat.index] : null;
+  const opNiveau = staat.scherm === "niveau" && !!t;
+  const inKleur = !!vraag || opNiveau;
+  $("start").hidden = inKleur;
+  $("vraag").hidden = !inKleur;
+  $("kaart-niveau").hidden = !opNiveau;
+  $("kaart-vraag").hidden = !vraag;
+  document.body.classList.toggle("is-vraag", inKleur);
+  if (inKleur) {
     document.body.style.setProperty("--cat", t.bg);
     document.body.style.setProperty("--cat-ink", t.inkt);
     $("vraag-kleur").textContent = t.kleur;
     $("vraag-thema").textContent = t.thema;
+    $("melding").hidden = !(vraag && staat.herschud);
+  }
+  if (opNiveau) {
+    tekenNiveaus();
+  } else if (vraag) {
+    const [v, a] = vraag;
+    const niv = niveauVan(staat.niveau);
+    $("vraag-label").textContent = "Vraag · " + niv.naam.toLowerCase();
+    $("tip").textContent = "Juist? Zet je loper " + vakjesTekst(niv.vakjes) + " vooruit en gooi nog eens. Fout? Geef de gsm door.";
     $("vraag-tekst").textContent = v;
     $("antwoord-tekst").textContent = a;
-    $("melding").hidden = !staat.herschud;
     $("antwoord").hidden = !staat.getoond;
     $("toon").hidden = staat.getoond;
     $("andere").hidden = staat.getoond;
@@ -863,10 +1401,10 @@ function start(vorig) {
   tekenRooster();
 
   $("worp").addEventListener("click", gooi);
-  $("lot").addEventListener("click", () => nieuweVraag(THEMAS[willekeurig(THEMAS.length)].id));
+  $("lot").addEventListener("click", () => kiesKleur(THEMAS[willekeurig(THEMAS.length)].id));
   $("terug").addEventListener("click", naarStart);
   $("volgende").addEventListener("click", naarStart);
-  $("andere").addEventListener("click", () => nieuweVraag(staat.thema));
+  $("andere").addEventListener("click", () => nieuweVraag(staat.thema, staat.niveau));
   $("toon").addEventListener("click", () => { staat.getoond = true; teken(); });
 
   const kiesVijfde = (welke) => { bak.vijfde = welke; bewaar(); pasVijfdeToe(); tekenRooster(); };
